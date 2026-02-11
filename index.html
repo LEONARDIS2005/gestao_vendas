@@ -42,33 +42,36 @@
         .tabs {
             display: flex;
             background: #f5f5f5;
-            border-bottom: 2px solid #ddd;
+            border-bottom: 3px solid #ddd;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .tab {
             flex: 1;
-            min-width: 130px;
-            padding: 20px 12px;
+            min-width: 140px;
+            padding: 25px 15px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             border: none;
             background: #f5f5f5;
-            font-size: 17px;
-            font-weight: 600;
-            line-height: 1.5;
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.6;
         }
 
         .tab:hover {
             background: #e0e0e0;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .tab.active {
             background: white;
-            border-bottom: 4px solid #667eea;
+            border-bottom: 5px solid #667eea;
             color: #667eea;
+            box-shadow: 0 -2px 10px rgba(102, 126, 234, 0.2);
         }
 
         .content {
@@ -364,13 +367,13 @@
         </header>
 
         <div class="tabs">
-            <button class="tab active" onclick="openTab(event, 'dashboard')">📊 Dashboard</button>
-            <button class="tab" onclick="openTab(event, 'compra')">➕ Nova Compra</button>
-            <button class="tab" onclick="openTab(event, 'despesas')">💰 Despesas</button>
-            <button class="tab" onclick="openTab(event, 'calculo')">🧮 Calcular Venda</button>
-            <button class="tab" onclick="openTab(event, 'vendas')">✅ Registrar Venda</button>
-            <button class="tab" onclick="openTab(event, 'lotes')">📋 Meus Lotes</button>
-            <button class="tab" onclick="openTab(event, 'historico')">📜 Histórico</button>
+            <button class="tab active" onclick="openTab(event, 'dashboard')">📊<br>Dashboard</button>
+            <button class="tab" onclick="openTab(event, 'compra')">➕<br>Nova Compra</button>
+            <button class="tab" onclick="openTab(event, 'despesas')">💰<br>Despesas</button>
+            <button class="tab" onclick="openTab(event, 'calculo')">🧮<br>Calcular</button>
+            <button class="tab" onclick="openTab(event, 'vendas')">✅<br>Vender</button>
+            <button class="tab" onclick="openTab(event, 'lotes')">📋<br>Lotes</button>
+            <button class="tab" onclick="openTab(event, 'historico')">📜<br>Histórico</button>
         </div>
 
         <div class="content">
@@ -434,7 +437,6 @@
                         </select>
                     </div>
 
-                    <!-- Campos para Comissão ML -->
                     <div id="camposComissaoML" class="hidden">
                         <div class="form-group">
                             <label>Tipo de Comissão:</label>
@@ -452,13 +454,10 @@
                         <div id="comissaoPercentual" class="form-group hidden">
                             <label>Percentual da Comissão (%):</label>
                             <input type="number" id="percentualComissao" step="0.01" min="0" max="100" placeholder="Ex: 15">
-                            <div class="info-box">
-                                ℹ️ O valor será calculado automaticamente em cada venda
-                            </div>
+                            <div class="info-box">ℹ️ O valor será calculado automaticamente em cada venda</div>
                         </div>
                     </div>
 
-                    <!-- Campo para outros tipos de despesa -->
                     <div id="campoValorDespesa" class="form-group">
                         <label>Valor da Despesa (R$):</label>
                         <input type="number" id="valorDespesa" step="0.01" min="0" placeholder="Ex: 150.00">
@@ -477,7 +476,7 @@
                 <div id="listaDespesas"></div>
             </div>
 
-            <!-- Cálculo de Venda -->
+            <!-- Cálculo -->
             <div id="calculo" class="tab-content">
                 <h2>🧮 Calcular Preço de Venda</h2>
                 <div id="alertaCalculo"></div>
@@ -522,7 +521,7 @@
                 <div id="resultadoCalculo"></div>
             </div>
 
-            <!-- Registrar Venda -->
+            <!-- Vendas -->
             <div id="vendas" class="tab-content">
                 <h2>✅ Registrar Venda de Notebook</h2>
                 <div id="alertaVendas"></div>
@@ -589,7 +588,7 @@
                 <div id="tabelaHistorico"></div>
             </div>
 
-            <!-- Meus Lotes -->
+            <!-- Lotes -->
             <div id="lotes" class="tab-content">
                 <h2>📋 Todos os Lotes</h2>
                 <div id="tabelaLotes"></div>
@@ -597,7 +596,7 @@
         </div>
     </div>
 
-    <!-- Modal de Edição de Venda -->
+    <!-- Modal -->
     <div id="modalEditarVenda" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -644,10 +643,7 @@
             document.getElementById(tabName).classList.add('active');
 
             if (tabName === 'dashboard') atualizarDashboard();
-            if (tabName === 'despesas') { 
-                atualizarSelectDespesas(); 
-                atualizarListaDespesas(); 
-            }
+            if (tabName === 'despesas') { atualizarSelectDespesas(); atualizarListaDespesas(); }
             if (tabName === 'calculo') atualizarSelectCalculo();
             if (tabName === 'vendas') atualizarSelectVendas();
             if (tabName === 'historico') atualizarHistoricoVendas();
@@ -690,7 +686,6 @@
 
         function adicionarCompra(e) {
             e.preventDefault();
-
             const dados = carregarDados();
             const editandoId = document.getElementById('editandoLoteId').value;
 
@@ -700,7 +695,7 @@
                 lote.quantidade = parseInt(document.getElementById('quantidade').value);
                 lote.valorCompra = parseFloat(document.getElementById('valorCompra').value);
                 lote.observacoes = document.getElementById('observacoes').value;
-                alert('✅ Lote atualizado com sucesso!');
+                alert('✅ Lote atualizado!');
             } else {
                 const novoLote = {
                     id: Date.now(),
@@ -715,7 +710,7 @@
                     valorPrevistoTotal: null
                 };
                 dados.lotes.push(novoLote);
-                alert('✅ Lote adicionado com sucesso!');
+                alert('✅ Lote adicionado!');
             }
 
             salvarDados(dados);
@@ -735,7 +730,6 @@
             document.getElementById('quantidade').value = lote.quantidade;
             document.getElementById('valorCompra').value = lote.valorCompra;
             document.getElementById('observacoes').value = lote.observacoes || '';
-
             document.getElementById('btnSalvarLote').textContent = '💾 Atualizar Lote';
             document.getElementById('btnCancelarEdicaoLote').classList.remove('hidden');
 
@@ -752,13 +746,10 @@
 
         function adicionarDespesa(e) {
             e.preventDefault();
-
             const dados = carregarDados();
             const editandoId = document.getElementById('editandoDespesaId').value;
             const tipo = document.getElementById('tipoDespesa').value;
-            let valor = 0;
-            let isPercentual = false;
-            let percentual = 0;
+            let valor = 0, isPercentual = false, percentual = 0;
 
             if (tipo === 'Comissão ML') {
                 const tipoComissao = document.getElementById('tipoComissao').value;
@@ -767,7 +758,6 @@
                 } else {
                     isPercentual = true;
                     percentual = parseFloat(document.getElementById('percentualComissao').value);
-                    valor = 0;
                 }
             } else {
                 valor = parseFloat(document.getElementById('valorDespesa').value);
@@ -782,21 +772,17 @@
                 despesa.percentual = percentual;
                 despesa.porUnidade = tipo === 'Comissão ML';
                 despesa.descricao = document.getElementById('descricaoDespesa').value;
-                alert('✅ Despesa atualizada com sucesso!');
+                alert('✅ Despesa atualizada!');
             } else {
-                const novaDespesa = {
+                dados.despesas.push({
                     id: Date.now(),
                     loteId: parseInt(document.getElementById('loteDespesa').value),
-                    tipo: tipo,
-                    valor: valor,
-                    isPercentual: isPercentual,
-                    percentual: percentual,
+                    tipo, valor, isPercentual, percentual,
                     porUnidade: tipo === 'Comissão ML',
                     descricao: document.getElementById('descricaoDespesa').value,
                     data: new Date().toLocaleDateString('pt-BR')
-                };
-                dados.despesas.push(novaDespesa);
-                alert('✅ Despesa adicionada com sucesso!');
+                });
+                alert('✅ Despesa adicionada!');
             }
 
             salvarDados(dados);
@@ -847,50 +833,27 @@
 
         function atualizarListaDespesas() {
             const dados = carregarDados();
-
             let html = '<table><thead><tr><th>Lote</th><th>Tipo</th><th>Valor</th><th>Descrição</th><th>Data</th><th>Ações</th></tr></thead><tbody>';
 
             if (dados.despesas.length === 0) {
-                html += '<tr><td colspan="6" style="text-align:center; padding: 30px;">💰 Nenhuma despesa cadastrada</td></tr>';
+                html += '<tr><td colspan="6" style="text-align:center; padding:30px;">💰 Nenhuma despesa</td></tr>';
             } else {
-                dados.despesas.forEach(despesa => {
-                    const lote = dados.lotes.find(l => l.id === despesa.loteId);
-                    const nomeLote = lote ? lote.nome : 'Lote deletado';
-                    let valorDisplay = '';
-
-                    if (despesa.isPercentual) {
-                        valorDisplay = `${despesa.percentual}% (calculado na venda)`;
-                    } else {
-                        valorDisplay = formatarMoeda(despesa.valor);
-                    }
-
-                    html += `
-                        <tr>
-                            <td>${nomeLote}</td>
-                            <td>${despesa.tipo}</td>
-                            <td>${valorDisplay}</td>
-                            <td>${despesa.descricao || '-'}</td>
-                            <td>${despesa.data}</td>
-                            <td>
-                                <button class="btn-action btn-edit" onclick="editarDespesa(${despesa.id})">✏️ Editar</button>
-                                <button class="btn-action btn-delete" onclick="deletarDespesa(${despesa.id})">🗑️ Excluir</button>
-                            </td>
-                        </tr>
-                    `;
+                dados.despesas.forEach(d => {
+                    const lote = dados.lotes.find(l => l.id === d.loteId);
+                    const valorDisplay = d.isPercentual ? `${d.percentual}%` : formatarMoeda(d.valor);
+                    html += `<tr><td>${lote ? lote.nome : 'Deletado'}</td><td>${d.tipo}</td><td>${valorDisplay}</td><td>${d.descricao || '-'}</td><td>${d.data}</td>
+                    <td><button class="btn-action btn-edit" onclick="editarDespesa(${d.id})">✏️</button>
+                    <button class="btn-action btn-delete" onclick="deletarDespesa(${d.id})">🗑️</button></td></tr>`;
                 });
             }
-
-            html += '</tbody></table>';
-            document.getElementById('listaDespesas').innerHTML = html;
+            document.getElementById('listaDespesas').innerHTML = html + '</tbody></table>';
         }
 
-        function deletarDespesa(despesaId) {
-            if (!confirm('Tem certeza que deseja excluir esta despesa?')) return;
-
+        function deletarDespesa(id) {
+            if (!confirm('Excluir despesa?')) return;
             const dados = carregarDados();
-            dados.despesas = dados.despesas.filter(d => d.id !== despesaId);
+            dados.despesas = dados.despesas.filter(d => d.id !== id);
             salvarDados(dados);
-
             atualizarListaDespesas();
             atualizarDashboard();
         }
@@ -901,9 +864,7 @@
             if (!lote) return null;
 
             const despesasLote = dados.despesas.filter(d => d.loteId === loteId);
-
-            let totalDespesasFixas = 0;
-            let totalDespesasPorVenda = 0;
+            let totalDespesasFixas = 0, totalDespesasPorVenda = 0;
 
             despesasLote.forEach(d => {
                 if (d.porUnidade) {
@@ -923,11 +884,11 @@
 
             return {
                 valorCompra: lote.valorCompra,
-                totalDespesasFixas: totalDespesasFixas,
-                custoTotalLote: custoTotalLote,
-                custoMedioUnidade: custoMedioUnidade,
+                totalDespesasFixas,
+                custoTotalLote,
+                custoMedioUnidade,
                 despesasPorVenda: totalDespesasPorVenda,
-                custoPorVenda: custoPorVenda,
+                custoPorVenda,
                 quantidade: lote.quantidade,
                 quantidadeVendida: lote.quantidadeVendida
             };
@@ -950,7 +911,6 @@
 
         function calcularVenda(e) {
             e.preventDefault();
-
             const loteId = parseInt(document.getElementById('loteCalculo').value);
             const markup = parseFloat(document.getElementById('markup').value);
             const custos = calcularCustoLote(loteId);
@@ -970,37 +930,16 @@
             lote.valorPrevistoUnidade = valorPorUnidadeFinal;
             salvarDados(dados);
 
-            const resultado = `
+            document.getElementById('resultadoCalculo').innerHTML = `
                 <div class="resultado">
-                    <h3>💰 Resultado do Cálculo</h3>
-                    <div class="resultado-item">
-                        <span>Custo Médio por Notebook:</span>
-                        <span>${formatarMoeda(custosComVenda.custoPorVenda)}</span>
-                    </div>
-                    <div class="resultado-item">
-                        <span>Markup Aplicado:</span>
-                        <span>${markup}%</span>
-                    </div>
-                    <div class="resultado-item resultado-destaque">
-                        <span>Preço Sugerido por Notebook:</span>
-                        <span>${formatarMoeda(valorPorUnidadeFinal)}</span>
-                    </div>
-                    <div class="resultado-item">
-                        <span>Lucro por Notebook:</span>
-                        <span>${formatarMoeda(lucroPorUnidade)}</span>
-                    </div>
-                    <div class="resultado-item resultado-destaque">
-                        <span>Meta Total do Lote (${custos.quantidade} notebooks):</span>
-                        <span>${formatarMoeda(valorTotalLote)}</span>
-                    </div>
-                    <div class="resultado-item">
-                        <span>Lucro Total Previsto:</span>
-                        <span>${formatarMoeda(lucroTotal)}</span>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('resultadoCalculo').innerHTML = resultado;
+                    <h3>💰 Resultado</h3>
+                    <div class="resultado-item"><span>Custo Médio:</span><span>${formatarMoeda(custosComVenda.custoPorVenda)}</span></div>
+                    <div class="resultado-item"><span>Markup:</span><span>${markup}%</span></div>
+                    <div class="resultado-item resultado-destaque"><span>Preço Sugerido:</span><span>${formatarMoeda(valorPorUnidadeFinal)}</span></div>
+                    <div class="resultado-item"><span>Lucro/Unidade:</span><span>${formatarMoeda(lucroPorUnidade)}</span></div>
+                    <div class="resultado-item resultado-destaque"><span>Meta Total (${custos.quantidade} nbs):</span><span>${formatarMoeda(valorTotalLote)}</span></div>
+                    <div class="resultado-item"><span>Lucro Total:</span><span>${formatarMoeda(lucroTotal)}</span></div>
+                </div>`;
         }
 
         function mostrarProgressoVenda() {
@@ -1015,7 +954,6 @@
             const total = lote.quantidade;
             const restante = total - vendidos;
             const percentual = (vendidos / total) * 100;
-
             const fatAcumulado = vendasLote.reduce((sum, v) => sum + v.valorReal, 0);
             const metaTotal = lote.valorPrevistoTotal || 0;
             const faltaMeta = metaTotal - fatAcumulado;
@@ -1040,7 +978,6 @@
 
         function registrarVenda(e) {
             e.preventDefault();
-
             const loteId = parseInt(document.getElementById('loteVenda').value);
             const valorReal = parseFloat(document.getElementById('valorVendaReal').value);
             const dataVenda = document.getElementById('dataVenda').value;
@@ -1048,44 +985,26 @@
 
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
-
             const custos = calcularCustoLote(loteId, valorReal);
-            const lucroEstaVenda = valorReal - custos.custoPorVenda;
+            const lucro = valorReal - custos.custoPorVenda;
             const valorPrevisto = lote.valorPrevistoUnidade || 0;
             const diferenca = valorReal - valorPrevisto;
 
-            const novaVenda = {
-                id: Date.now(),
-                loteId: loteId,
-                valorReal: valorReal,
-                valorPrevisto: valorPrevisto,
-                diferenca: diferenca,
+            dados.vendas.push({
+                id: Date.now(), loteId, valorReal, valorPrevisto, diferenca,
                 custoUnidade: custos.custoPorVenda,
-                lucroUnidade: lucroEstaVenda,
-                dataVenda: dataVenda,
-                observacoes: obs
-            };
+                lucroUnidade: lucro,
+                dataVenda, observacoes: obs
+            });
 
-            dados.vendas.push(novaVenda);
             lote.quantidadeVendida++;
-
-            if (lote.quantidadeVendida >= lote.quantidade) {
-                lote.status = 'Vendido';
-            } else {
-                lote.status = 'Parcial';
-            }
-
+            lote.status = lote.quantidadeVendida >= lote.quantidade ? 'Vendido' : 'Parcial';
             salvarDados(dados);
 
-            const positivo = diferenca >= 0;
-            const icone = positivo ? '📈' : '📉';
-
             alert(`✅ Venda registrada!
-
-${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
-💰 Lucro nesta venda: ${formatarMoeda(lucroEstaVenda)}
-
-📦 Vendidos: ${lote.quantidadeVendida} de ${lote.quantidade}`);
+${diferenca >= 0 ? '📈' : '📉'} Diferença: ${formatarMoeda(diferenca)}
+💰 Lucro: ${formatarMoeda(lucro)}
+📦 ${lote.quantidadeVendida}/${lote.quantidade}`);
 
             e.target.reset();
             document.getElementById('dataVenda').valueAsDate = new Date();
@@ -1096,12 +1015,10 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
         function abrirModalEditarVenda(vendaId) {
             const dados = carregarDados();
             const venda = dados.vendas.find(v => v.id === vendaId);
-
             document.getElementById('editVendaId').value = venda.id;
             document.getElementById('editVendaValor').value = venda.valorReal;
             document.getElementById('editVendaData').value = venda.dataVenda;
             document.getElementById('editVendaObs').value = venda.observacoes || '';
-
             document.getElementById('modalEditarVenda').style.display = 'block';
         }
 
@@ -1111,11 +1028,9 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
 
         function salvarEdicaoVenda(e) {
             e.preventDefault();
-
             const dados = carregarDados();
             const vendaId = parseInt(document.getElementById('editVendaId').value);
             const venda = dados.vendas.find(v => v.id === vendaId);
-
             const novoValor = parseFloat(document.getElementById('editVendaValor').value);
             const custos = calcularCustoLote(venda.loteId, novoValor);
 
@@ -1128,164 +1043,112 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
 
             salvarDados(dados);
             fecharModalVenda();
-            alert('✅ Venda atualizada com sucesso!');
+            alert('✅ Atualizado!');
             atualizarHistoricoVendas();
             atualizarDashboard();
         }
 
         function deletarVenda(vendaId) {
-            if (!confirm('Tem certeza que deseja excluir esta venda?')) return;
-
+            if (!confirm('Excluir venda?')) return;
             const dados = carregarDados();
             const venda = dados.vendas.find(v => v.id === vendaId);
             const lote = dados.lotes.find(l => l.id === venda.loteId);
 
             lote.quantidadeVendida--;
-
-            if (lote.quantidadeVendida === 0) {
-                lote.status = 'Pendente';
-            } else if (lote.quantidadeVendida < lote.quantidade) {
-                lote.status = 'Parcial';
-            }
-
+            lote.status = lote.quantidadeVendida === 0 ? 'Pendente' : (lote.quantidadeVendida < lote.quantidade ? 'Parcial' : 'Vendido');
             dados.vendas = dados.vendas.filter(v => v.id !== vendaId);
             salvarDados(dados);
-
-            alert('✅ Venda excluída com sucesso!');
+            alert('✅ Excluído!');
             atualizarHistoricoVendas();
             atualizarDashboard();
         }
 
         function atualizarHistoricoVendas() {
             const dados = carregarDados();
-
-            let html = '<table><thead><tr><th>Lote</th><th>Data</th><th>Valor Venda</th><th>Previsto</th><th>Diferença</th><th>Lucro</th><th>Obs</th><th>Ações</th></tr></thead><tbody>';
+            let html = '<table><thead><tr><th>Lote</th><th>Data</th><th>Venda</th><th>Previsto</th><th>Diferença</th><th>Lucro</th><th>Obs</th><th>Ações</th></tr></thead><tbody>';
 
             if (dados.vendas.length === 0) {
-                html += '<tr><td colspan="8" style="text-align:center; padding: 30px;">📜 Nenhuma venda registrada</td></tr>';
+                html += '<tr><td colspan="8" style="text-align:center;padding:30px;">📜 Nenhuma venda</td></tr>';
             } else {
-                dados.vendas.sort((a, b) => new Date(b.dataVenda) - new Date(a.dataVenda)).forEach(venda => {
-                    const lote = dados.lotes.find(l => l.id === venda.loteId);
-                    const nomeLote = lote ? lote.nome : 'Lote deletado';
-                    const corDif = venda.diferenca >= 0 ? '#00b894' : '#e74c3c';
-
-                    html += `
-                        <tr>
-                            <td>${nomeLote}</td>
-                            <td>${venda.dataVenda}</td>
-                            <td>${formatarMoeda(venda.valorReal)}</td>
-                            <td>${formatarMoeda(venda.valorPrevisto)}</td>
-                            <td style="color: ${corDif}; font-weight: bold;">${formatarMoeda(venda.diferenca)}</td>
-                            <td style="color: #00b894; font-weight: bold;">${formatarMoeda(venda.lucroUnidade)}</td>
-                            <td>${venda.observacoes || '-'}</td>
-                            <td>
-                                <button class="btn-action btn-edit" onclick="abrirModalEditarVenda(${venda.id})">✏️</button>
-                                <button class="btn-action btn-delete" onclick="deletarVenda(${venda.id})">🗑️</button>
-                            </td>
-                        </tr>
-                    `;
+                dados.vendas.sort((a, b) => new Date(b.dataVenda) - new Date(a.dataVenda)).forEach(v => {
+                    const lote = dados.lotes.find(l => l.id === v.loteId);
+                    const cor = v.diferenca >= 0 ? '#00b894' : '#e74c3c';
+                    html += `<tr><td>${lote ? lote.nome : 'Deletado'}</td><td>${v.dataVenda}</td><td>${formatarMoeda(v.valorReal)}</td>
+                    <td>${formatarMoeda(v.valorPrevisto)}</td><td style="color:${cor};font-weight:bold;">${formatarMoeda(v.diferenca)}</td>
+                    <td style="color:#00b894;font-weight:bold;">${formatarMoeda(v.lucroUnidade)}</td><td>${v.observacoes || '-'}</td>
+                    <td><button class="btn-action btn-edit" onclick="abrirModalEditarVenda(${v.id})">✏️</button>
+                    <button class="btn-action btn-delete" onclick="deletarVenda(${v.id})">🗑️</button></td></tr>`;
                 });
             }
-
-            html += '</tbody></table>';
-            document.getElementById('tabelaHistorico').innerHTML = html;
+            document.getElementById('tabelaHistorico').innerHTML = html + '</tbody></table>';
         }
 
         function atualizarSelectDespesas() {
             const dados = carregarDados();
             const lotesAtivos = dados.lotes.filter(l => l.status !== 'Vendido');
-
-            const selectDespesa = document.getElementById('loteDespesa');
-            selectDespesa.innerHTML = '<option value="">Selecione um lote...</option>';
+            const select = document.getElementById('loteDespesa');
+            select.innerHTML = '<option value="">Selecione...</option>';
 
             if (lotesAtivos.length === 0) {
-                document.getElementById('alertaDespesas').innerHTML = '<div class="alerta">⚠️ Você precisa cadastrar um lote primeiro</div>';
-                selectDespesa.disabled = true;
+                document.getElementById('alertaDespesas').innerHTML = '<div class="alerta">⚠️ Cadastre um lote primeiro</div>';
+                select.disabled = true;
             } else {
                 document.getElementById('alertaDespesas').innerHTML = '';
-                selectDespesa.disabled = false;
-                lotesAtivos.forEach(lote => {
-                    selectDespesa.innerHTML += `<option value="${lote.id}">${lote.nome}</option>`;
-                });
+                select.disabled = false;
+                lotesAtivos.forEach(l => select.innerHTML += `<option value="${l.id}">${l.nome}</option>`);
             }
         }
 
         function atualizarSelectCalculo() {
             const dados = carregarDados();
             const lotesAtivos = dados.lotes.filter(l => l.status !== 'Vendido');
-
-            const selectCalculo = document.getElementById('loteCalculo');
-            selectCalculo.innerHTML = '<option value="">Selecione um lote...</option>';
+            const select = document.getElementById('loteCalculo');
+            select.innerHTML = '<option value="">Selecione...</option>';
 
             if (lotesAtivos.length === 0) {
-                document.getElementById('alertaCalculo').innerHTML = '<div class="alerta">⚠️ Você precisa cadastrar um lote primeiro</div>';
-                selectCalculo.disabled = true;
+                document.getElementById('alertaCalculo').innerHTML = '<div class="alerta">⚠️ Cadastre um lote primeiro</div>';
+                select.disabled = true;
             } else {
                 document.getElementById('alertaCalculo').innerHTML = '';
-                selectCalculo.disabled = false;
-                lotesAtivos.forEach(lote => {
-                    selectCalculo.innerHTML += `<option value="${lote.id}">${lote.nome}</option>`;
-                });
+                select.disabled = false;
+                lotesAtivos.forEach(l => select.innerHTML += `<option value="${l.id}">${l.nome}</option>`);
             }
         }
 
         function atualizarSelectVendas() {
             const dados = carregarDados();
             const lotesAtivos = dados.lotes.filter(l => l.status !== 'Vendido');
-
-            const selectVenda = document.getElementById('loteVenda');
-            selectVenda.innerHTML = '<option value="">Selecione um lote...</option>';
+            const select = document.getElementById('loteVenda');
+            select.innerHTML = '<option value="">Selecione...</option>';
 
             if (lotesAtivos.length === 0) {
-                document.getElementById('alertaVendas').innerHTML = '<div class="alerta">⚠️ Você precisa cadastrar um lote primeiro</div>';
-                selectVenda.disabled = true;
+                document.getElementById('alertaVendas').innerHTML = '<div class="alerta">⚠️ Cadastre um lote primeiro</div>';
+                select.disabled = true;
             } else {
                 document.getElementById('alertaVendas').innerHTML = '';
-                selectVenda.disabled = false;
-                lotesAtivos.forEach(lote => {
-                    selectVenda.innerHTML += `<option value="${lote.id}">${lote.nome} (${lote.quantidadeVendida}/${lote.quantidade})</option>`;
-                });
+                select.disabled = false;
+                lotesAtivos.forEach(l => select.innerHTML += `<option value="${l.id}">${l.nome} (${l.quantidadeVendida}/${l.quantidade})</option>`);
             }
         }
 
         function atualizarDashboard() {
             const dados = carregarDados();
-
             const totalInvestido = dados.lotes.reduce((sum, l) => sum + l.valorCompra, 0);
-            let totalDespesas = dados.despesas.filter(d => !d.porUnidade).reduce((sum, d) => sum + d.valor, 0);
-
+            const totalDespesas = dados.despesas.filter(d => !d.porUnidade).reduce((sum, d) => sum + d.valor, 0);
             const totalVendas = dados.vendas.reduce((sum, v) => sum + v.valorReal, 0);
             const lucroTotal = dados.vendas.reduce((sum, v) => sum + v.lucroUnidade, 0);
 
-            const cards = `
-                <div class="card">
-                    <h3>💼 Total Investido</h3>
-                    <div class="value">${formatarMoeda(totalInvestido)}</div>
-                </div>
-                <div class="card">
-                    <h3>💸 Despesas Fixas</h3>
-                    <div class="value">${formatarMoeda(totalDespesas)}</div>
-                </div>
-                <div class="card">
-                    <h3>📦 Notebooks Vendidos</h3>
-                    <div class="value">${dados.vendas.length}</div>
-                </div>
-                <div class="card">
-                    <h3>💰 Faturamento</h3>
-                    <div class="value">${formatarMoeda(totalVendas)}</div>
-                </div>
-                <div class="card">
-                    <h3>🎯 Lucro Total</h3>
-                    <div class="value">${formatarMoeda(lucroTotal)}</div>
-                </div>
-            `;
-
-            document.getElementById('dashboardCards').innerHTML = cards;
+            document.getElementById('dashboardCards').innerHTML = `
+                <div class="card"><h3>💼 Investido</h3><div class="value">${formatarMoeda(totalInvestido)}</div></div>
+                <div class="card"><h3>💸 Despesas</h3><div class="value">${formatarMoeda(totalDespesas)}</div></div>
+                <div class="card"><h3>📦 Vendidos</h3><div class="value">${dados.vendas.length}</div></div>
+                <div class="card"><h3>💰 Faturamento</h3><div class="value">${formatarMoeda(totalVendas)}</div></div>
+                <div class="card"><h3>🎯 Lucro</h3><div class="value">${formatarMoeda(lucroTotal)}</div></div>`;
 
             let tabela = '<table><thead><tr><th>Lote</th><th>Progresso</th><th>Faturado</th><th>Meta</th><th>Falta</th><th>Status</th></tr></thead><tbody>';
 
             if (dados.lotes.length === 0) {
-                tabela += '<tr><td colspan="6" style="text-align:center; padding: 30px;">📦 Nenhum lote cadastrado</td></tr>';
+                tabela += '<tr><td colspan="6" style="text-align:center;padding:30px;">📦 Nenhum lote</td></tr>';
             } else {
                 dados.lotes.forEach(lote => {
                     const vendasLote = dados.vendas.filter(v => v.loteId === lote.id);
@@ -1293,31 +1156,20 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
                     const meta = lote.valorPrevistoTotal || 0;
                     const falta = Math.max(0, meta - faturado);
                     const statusClass = lote.status === 'Vendido' ? 'status-vendido' : (lote.status === 'Parcial' ? 'status-parcial' : 'status-pendente');
-
-                    tabela += `
-                        <tr>
-                            <td>${lote.nome}</td>
-                            <td>${lote.quantidadeVendida}/${lote.quantidade}</td>
-                            <td>${formatarMoeda(faturado)}</td>
-                            <td>${meta > 0 ? formatarMoeda(meta) : '-'}</td>
-                            <td style="color: #e74c3c; font-weight: bold;">${meta > 0 ? formatarMoeda(falta) : '-'}</td>
-                            <td><span class="status-badge ${statusClass}">${lote.status}</span></td>
-                        </tr>
-                    `;
+                    tabela += `<tr><td>${lote.nome}</td><td>${lote.quantidadeVendida}/${lote.quantidade}</td><td>${formatarMoeda(faturado)}</td>
+                    <td>${meta > 0 ? formatarMoeda(meta) : '-'}</td><td style="color:#e74c3c;font-weight:bold;">${meta > 0 ? formatarMoeda(falta) : '-'}</td>
+                    <td><span class="status-badge ${statusClass}">${lote.status}</span></td></tr>`;
                 });
             }
-
-            tabela += '</tbody></table>';
-            document.getElementById('dashboardTable').innerHTML = tabela;
+            document.getElementById('dashboardTable').innerHTML = tabela + '</tbody></table>';
         }
 
         function atualizarTabelaLotes() {
             const dados = carregarDados();
-
             let html = '<table><thead><tr><th>Lote</th><th>Qtd</th><th>Vendidos</th><th>Custo</th><th>Meta</th><th>Faturado</th><th>Lucro</th><th>Status</th><th>Ações</th></tr></thead><tbody>';
 
             if (dados.lotes.length === 0) {
-                html += '<tr><td colspan="9" style="text-align:center; padding: 30px;">📦 Nenhum lote cadastrado</td></tr>';
+                html += '<tr><td colspan="9" style="text-align:center;padding:30px;">📦 Nenhum lote</td></tr>';
             } else {
                 dados.lotes.forEach(lote => {
                     const vendasLote = dados.vendas.filter(v => v.loteId === lote.id);
@@ -1326,39 +1178,26 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
                     const lucro = vendasLote.reduce((sum, v) => sum + v.lucroUnidade, 0);
                     const statusClass = lote.status === 'Vendido' ? 'status-vendido' : (lote.status === 'Parcial' ? 'status-parcial' : 'status-pendente');
 
-                    html += `
-                        <tr>
-                            <td>${lote.nome}</td>
-                            <td>${lote.quantidade}</td>
-                            <td>${lote.quantidadeVendida}</td>
-                            <td>${custos ? formatarMoeda(custos.custoTotalLote) : '-'}</td>
-                            <td>${lote.valorPrevistoTotal ? formatarMoeda(lote.valorPrevistoTotal) : '-'}</td>
-                            <td>${formatarMoeda(faturado)}</td>
-                            <td style="color: ${lucro >= 0 ? '#00b894' : '#e74c3c'}; font-weight: bold;">${formatarMoeda(lucro)}</td>
-                            <td><span class="status-badge ${statusClass}">${lote.status}</span></td>
-                            <td>
-                                <button class="btn-action btn-edit" onclick="editarLote(${lote.id})">✏️</button>
-                                <button class="btn-action btn-delete" onclick="deletarLote(${lote.id})">🗑️</button>
-                            </td>
-                        </tr>
-                    `;
+                    html += `<tr><td>${lote.nome}</td><td>${lote.quantidade}</td><td>${lote.quantidadeVendida}</td>
+                    <td>${custos ? formatarMoeda(custos.custoTotalLote) : '-'}</td>
+                    <td>${lote.valorPrevistoTotal ? formatarMoeda(lote.valorPrevistoTotal) : '-'}</td><td>${formatarMoeda(faturado)}</td>
+                    <td style="color:${lucro >= 0 ? '#00b894' : '#e74c3c'};font-weight:bold;">${formatarMoeda(lucro)}</td>
+                    <td><span class="status-badge ${statusClass}">${lote.status}</span></td>
+                    <td><button class="btn-action btn-edit" onclick="editarLote(${lote.id})">✏️</button>
+                    <button class="btn-action btn-delete" onclick="deletarLote(${lote.id})">🗑️</button></td></tr>`;
                 });
             }
-
-            html += '</tbody></table>';
-            document.getElementById('tabelaLotes').innerHTML = html;
+            document.getElementById('tabelaLotes').innerHTML = html + '</tbody></table>';
         }
 
         function deletarLote(loteId) {
-            if (!confirm('Tem certeza que deseja deletar este lote? Todas as vendas e despesas relacionadas também serão excluídas.')) return;
-
+            if (!confirm('Deletar lote e TUDO relacionado?')) return;
             const dados = carregarDados();
             dados.lotes = dados.lotes.filter(l => l.id !== loteId);
             dados.despesas = dados.despesas.filter(d => d.loteId !== loteId);
             dados.vendas = dados.vendas.filter(v => v.loteId !== loteId);
             salvarDados(dados);
-
-            alert('✅ Lote excluído com sucesso!');
+            alert('✅ Deletado!');
             atualizarTabelaLotes();
             atualizarDashboard();
         }
@@ -1368,10 +1207,7 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
         }
 
         window.onclick = function(event) {
-            const modal = document.getElementById('modalEditarVenda');
-            if (event.target == modal) {
-                fecharModalVenda();
-            }
+            if (event.target == document.getElementById('modalEditarVenda')) fecharModalVenda();
         }
 
         window.onload = function() {
