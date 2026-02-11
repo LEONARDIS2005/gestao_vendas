@@ -197,6 +197,9 @@
 
         .resultado-item:last-child {
             border-bottom: none;
+        }
+
+        .resultado-destaque {
             font-weight: bold;
             font-size: 1.2em;
             color: #667eea;
@@ -228,6 +231,11 @@
             color: #d63031;
         }
 
+        .status-parcial {
+            background: #74b9ff;
+            color: #0984e3;
+        }
+
         .status-vendido {
             background: #55efc4;
             color: #00b894;
@@ -240,12 +248,6 @@
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 15px;
         }
 
         .hidden {
@@ -261,13 +263,61 @@
             font-size: 14px;
             color: #2c3e50;
         }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #ecf0f1;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 0.3s;
+        }
+
+        .meta-box {
+            background: #fff9e6;
+            border: 2px solid #f39c12;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .meta-box h3 {
+            color: #f39c12;
+            margin-bottom: 15px;
+        }
+
+        .sugestao-preco {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .sugestao-preco .preco {
+            font-size: 2em;
+            font-weight: bold;
+            color: #28a745;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>💻 Gestão de Notebooks - Leilão</h1>
-            <p>Controle completo de compra, venda e lucro</p>
+            <p>Controle completo de compra, venda e lucro por unidade</p>
         </header>
 
         <div class="tabs">
@@ -342,13 +392,13 @@
                         <div class="form-group">
                             <label>Tipo de Comissão:</label>
                             <select id="tipoComissao" onchange="alterarTipoComissao()">
-                                <option value="valor">Valor Fixo (R$)</option>
+                                <option value="valor">Valor Fixo por Unidade (R$)</option>
                                 <option value="percentual">Percentual (%)</option>
                             </select>
                         </div>
 
                         <div id="comissaoValor" class="form-group">
-                            <label>Valor da Comissão (R$):</label>
+                            <label>Valor da Comissão por Unidade (R$):</label>
                             <input type="number" id="valorComissaoFixo" step="0.01" min="0" placeholder="Ex: 50.00">
                         </div>
 
@@ -356,7 +406,7 @@
                             <label>Percentual da Comissão (%):</label>
                             <input type="number" id="percentualComissao" step="0.01" min="0" max="100" placeholder="Ex: 15">
                             <div class="info-box">
-                                ℹ️ O valor será calculado automaticamente quando você registrar a venda
+                                ℹ️ O valor será calculado automaticamente em cada venda
                             </div>
                         </div>
                     </div>
@@ -387,7 +437,7 @@
                     </div>
 
                     <div id="custoAtual" style="display:none;" class="resultado">
-                        <h3>📊 Custos Atuais do Lote</h3>
+                        <h3>📊 Custos do Lote</h3>
                         <div class="resultado-item">
                             <span>Valor da Compra:</span>
                             <span id="custoCompra">R$ 0,00</span>
@@ -396,12 +446,17 @@
                             <span>Total de Despesas:</span>
                             <span id="custoDespesas">R$ 0,00</span>
                         </div>
-                        <div class="resultado-item">
-                            <span>Custo Total:</span>
+                        <div class="resultado-item resultado-destaque">
+                            <span>Custo Total do Lote:</span>
                             <span id="custoTotal">R$ 0,00</span>
                         </div>
-                        <div id="avisoComissaoPercentual" class="info-box hidden">
-                            ⚠️ Este lote tem comissão do ML em percentual. O valor será descontado do lucro final após a venda.
+                        <div class="resultado-item">
+                            <span>Quantidade de Notebooks:</span>
+                            <span id="qtdNotebooks">0</span>
+                        </div>
+                        <div class="resultado-item resultado-destaque">
+                            <span>Custo Médio por Unidade:</span>
+                            <span id="custoMedio">R$ 0,00</span>
                         </div>
                     </div>
 
@@ -418,29 +473,49 @@
 
             <!-- Registrar Venda -->
             <div id="vendas" class="tab-content">
-                <h2>✅ Registrar Venda Realizada</h2>
+                <h2>✅ Registrar Venda de Notebook</h2>
                 <div id="alertaVendas"></div>
                 <form onsubmit="registrarVenda(event)">
                     <div class="form-group">
                         <label>Selecione o Lote:</label>
-                        <select id="loteVenda" required onchange="mostrarValorPrevisto()"></select>
+                        <select id="loteVenda" required onchange="mostrarProgressoVenda()"></select>
                     </div>
 
-                    <div id="valorPrevisto" style="display:none;" class="resultado">
-                        <h3>💡 Valor Previsto (último cálculo)</h3>
-                        <div class="resultado-item">
-                            <span>Markup Calculado:</span>
-                            <span id="markupPrevisto">-</span>
+                    <div id="progressoVenda" style="display:none;">
+                        <div class="resultado">
+                            <h3>📊 Progresso do Lote</h3>
+                            <div class="resultado-item">
+                                <span>Notebooks Vendidos:</span>
+                                <span id="nbVendidos">0 de 0</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressBar" style="width: 0%">0%</div>
+                            </div>
+                            <div class="resultado-item">
+                                <span>Faturamento Acumulado:</span>
+                                <span id="fatAcumulado">R$ 0,00</span>
+                            </div>
+                            <div class="resultado-item resultado-destaque">
+                                <span>Meta Total do Lote:</span>
+                                <span id="metaTotal">R$ 0,00</span>
+                            </div>
+                            <div class="resultado-item">
+                                <span>Falta para Atingir Meta:</span>
+                                <span id="faltaMeta" style="color: #e74c3c; font-weight: bold;">R$ 0,00</span>
+                            </div>
                         </div>
-                        <div class="resultado-item">
-                            <span>Valor Previsto do Lote:</span>
-                            <span id="valorPrevistoLote">R$ 0,00</span>
+
+                        <div class="sugestao-preco" id="sugestaoPreco">
+                            <h4>💡 Sugestão de Preço para Próxima Venda</h4>
+                            <p>Para manter o markup de <span id="markupSugerido">0</span>%:</p>
+                            <div class="preco" id="precoSugerido">R$ 0,00</div>
+                            <small>Este valor garante que você atinja a meta do lote</small>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label>Valor Real da Venda (R$):</label>
-                        <input type="number" id="valorVendaReal" required step="0.01" min="0" placeholder="Quanto você vendeu o lote inteiro">
+                        <input type="number" id="valorVendaReal" required step="0.01" min="0" placeholder="Quanto você vendeu ESTE notebook">
                     </div>
 
                     <div class="form-group">
@@ -540,12 +615,13 @@
                 id: Date.now(),
                 nome: document.getElementById('nomeLote').value,
                 quantidade: parseInt(document.getElementById('quantidade').value),
+                quantidadeVendida: 0,
                 valorCompra: parseFloat(document.getElementById('valorCompra').value),
                 observacoes: document.getElementById('observacoes').value,
                 data: new Date().toLocaleDateString('pt-BR'),
                 status: 'Pendente',
                 markupCalculado: null,
-                valorPrevistoVenda: null
+                valorPrevistoTotal: null
             };
 
             dados.lotes.push(novoLote);
@@ -573,7 +649,7 @@
                 } else {
                     isPercentual = true;
                     percentual = parseFloat(document.getElementById('percentualComissao').value);
-                    valor = 0; // Será calculado na venda
+                    valor = 0;
                 }
             } else {
                 valor = parseFloat(document.getElementById('valorDespesa').value);
@@ -586,6 +662,7 @@
                 valor: valor,
                 isPercentual: isPercentual,
                 percentual: percentual,
+                porUnidade: tipo === 'Comissão ML',
                 descricao: document.getElementById('descricaoDespesa').value,
                 data: new Date().toLocaleDateString('pt-BR')
             };
@@ -595,39 +672,49 @@
 
             alert('✅ Despesa adicionada com sucesso!');
             e.target.reset();
-            mostrarCamposComissao(); // Reset campos
+            mostrarCamposComissao();
             atualizarSelectDespesas();
         }
 
         // Calcular custo total de um lote
-        function calcularCustoLote(loteId, valorVenda = 0) {
+        function calcularCustoLote(loteId, valorVendaUnidade = 0) {
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
             const despesasLote = dados.despesas.filter(d => d.loteId === loteId);
+            const vendasLote = dados.vendas.filter(v => v.loteId === loteId);
 
-            let totalDespesas = 0;
-            let temComissaoPercentual = false;
+            let totalDespesasFixas = 0;
+            let totalDespesasPorVenda = 0;
 
             despesasLote.forEach(d => {
-                if (d.isPercentual && valorVenda > 0) {
-                    // Calcular comissão percentual
-                    totalDespesas += (valorVenda * d.percentual / 100);
-                } else if (!d.isPercentual) {
-                    totalDespesas += d.valor;
-                } else if (d.isPercentual) {
-                    temComissaoPercentual = true;
+                if (d.porUnidade) {
+                    if (d.isPercentual && valorVendaUnidade > 0) {
+                        totalDespesasPorVenda += (valorVendaUnidade * d.percentual / 100);
+                    } else if (!d.isPercentual) {
+                        totalDespesasPorVenda += d.valor;
+                    }
+                } else {
+                    totalDespesasFixas += d.valor;
                 }
             });
 
+            const custoTotalLote = lote.valorCompra + totalDespesasFixas;
+            const custoMedioUnidade = custoTotalLote / lote.quantidade;
+            const custoPorVenda = custoMedioUnidade + totalDespesasPorVenda;
+
             return {
                 valorCompra: lote.valorCompra,
-                totalDespesas: totalDespesas,
-                custoTotal: lote.valorCompra + totalDespesas,
-                temComissaoPercentual: temComissaoPercentual
+                totalDespesasFixas: totalDespesasFixas,
+                custoTotalLote: custoTotalLote,
+                custoMedioUnidade: custoMedioUnidade,
+                despesasPorVenda: totalDespesasPorVenda,
+                custoPorVenda: custoPorVenda,
+                quantidade: lote.quantidade,
+                quantidadeVendida: lote.quantidadeVendida
             };
         }
 
-        // Mostrar custo atual ao selecionar lote
+        // Mostrar custo atual
         function mostrarCustoAtual() {
             const loteId = parseInt(document.getElementById('loteCalculo').value);
             if (!loteId) return;
@@ -635,15 +722,10 @@
             const custos = calcularCustoLote(loteId);
             document.getElementById('custoAtual').style.display = 'block';
             document.getElementById('custoCompra').textContent = formatarMoeda(custos.valorCompra);
-            document.getElementById('custoDespesas').textContent = formatarMoeda(custos.totalDespesas);
-            document.getElementById('custoTotal').textContent = formatarMoeda(custos.custoTotal);
-
-            const aviso = document.getElementById('avisoComissaoPercentual');
-            if (custos.temComissaoPercentual) {
-                aviso.classList.remove('hidden');
-            } else {
-                aviso.classList.add('hidden');
-            }
+            document.getElementById('custoDespesas').textContent = formatarMoeda(custos.totalDespesasFixas);
+            document.getElementById('custoTotal').textContent = formatarMoeda(custos.custoTotalLote);
+            document.getElementById('qtdNotebooks').textContent = custos.quantidade;
+            document.getElementById('custoMedio').textContent = formatarMoeda(custos.custoMedioUnidade);
         }
 
         // Calcular venda
@@ -654,74 +736,95 @@
             const markup = parseFloat(document.getElementById('markup').value);
             const custos = calcularCustoLote(loteId);
 
-            const valorVenda = custos.custoTotal * (1 + markup / 100);
+            // Valor previsto por unidade
+            const valorPorUnidade = custos.custoMedioUnidade * (1 + markup / 100);
 
-            // Recalcular com o valor de venda para comissões percentuais
-            const custosComVenda = calcularCustoLote(loteId, valorVenda);
-            const valorVendaFinal = custosComVenda.custoTotal * (1 + markup / 100);
-            const lucro = valorVendaFinal - custosComVenda.custoTotal;
-            const margemLucro = (lucro / valorVendaFinal) * 100;
+            // Recalcular considerando despesas por venda
+            const custosComVenda = calcularCustoLote(loteId, valorPorUnidade);
+            const valorPorUnidadeFinal = custosComVenda.custoPorVenda * (1 + markup / 100);
+            const valorTotalLote = valorPorUnidadeFinal * custos.quantidade;
+            const lucroTotal = valorTotalLote - (custosComVenda.custoPorVenda * custos.quantidade);
+            const lucroPorUnidade = valorPorUnidadeFinal - custosComVenda.custoPorVenda;
 
-            // Salvar o cálculo no lote
+            // Salvar cálculo no lote
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
             lote.markupCalculado = markup;
-            lote.valorPrevistoVenda = valorVendaFinal;
+            lote.valorPrevistoTotal = valorTotalLote;
+            lote.valorPrevistoUnidade = valorPorUnidadeFinal;
             salvarDados(dados);
-
-            let avisoComissao = '';
-            if (custos.temComissaoPercentual) {
-                avisoComissao = '<div class="info-box">ℹ️ Este cálculo já inclui a comissão do ML em percentual aplicada sobre o valor de venda.</div>';
-            }
 
             const resultado = `
                 <div class="resultado">
                     <h3>💰 Resultado do Cálculo</h3>
                     <div class="resultado-item">
-                        <span>Custo Total do Lote:</span>
-                        <span>${formatarMoeda(custosComVenda.custoTotal)}</span>
+                        <span>Custo Médio por Notebook:</span>
+                        <span>${formatarMoeda(custosComVenda.custoPorVenda)}</span>
                     </div>
                     <div class="resultado-item">
                         <span>Markup Aplicado:</span>
                         <span>${markup}%</span>
                     </div>
-                    <div class="resultado-item">
-                        <span>Valor de Venda do Lote:</span>
-                        <span>${formatarMoeda(valorVendaFinal)}</span>
+                    <div class="resultado-item resultado-destaque">
+                        <span>Preço Sugerido por Notebook:</span>
+                        <span>${formatarMoeda(valorPorUnidadeFinal)}</span>
                     </div>
                     <div class="resultado-item">
-                        <span>Lucro Previsto:</span>
-                        <span>${formatarMoeda(lucro)}</span>
+                        <span>Lucro por Notebook:</span>
+                        <span>${formatarMoeda(lucroPorUnidade)}</span>
+                    </div>
+                    <div class="resultado-item resultado-destaque">
+                        <span>Meta Total do Lote (${custos.quantidade} notebooks):</span>
+                        <span>${formatarMoeda(valorTotalLote)}</span>
                     </div>
                     <div class="resultado-item">
-                        <span>Margem de Lucro:</span>
-                        <span>${margemLucro.toFixed(2)}%</span>
+                        <span>Lucro Total Previsto:</span>
+                        <span>${formatarMoeda(lucroTotal)}</span>
                     </div>
-                    ${avisoComissao}
                 </div>
             `;
 
             document.getElementById('resultadoCalculo').innerHTML = resultado;
         }
 
-        // Mostrar valor previsto ao selecionar lote para venda
-        function mostrarValorPrevisto() {
+        // Mostrar progresso da venda
+        function mostrarProgressoVenda() {
             const loteId = parseInt(document.getElementById('loteVenda').value);
             if (!loteId) return;
 
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
+            const vendasLote = dados.vendas.filter(v => v.loteId === loteId);
 
-            if (lote.valorPrevistoVenda) {
-                document.getElementById('valorPrevisto').style.display = 'block';
-                document.getElementById('markupPrevisto').textContent = lote.markupCalculado + '%';
-                document.getElementById('valorPrevistoLote').textContent = formatarMoeda(lote.valorPrevistoVenda);
+            const vendidos = lote.quantidadeVendida;
+            const total = lote.quantidade;
+            const restante = total - vendidos;
+            const percentual = (vendidos / total) * 100;
+
+            const fatAcumulado = vendasLote.reduce((sum, v) => sum + v.valorReal, 0);
+            const metaTotal = lote.valorPrevistoTotal || 0;
+            const faltaMeta = metaTotal - fatAcumulado;
+
+            document.getElementById('progressoVenda').style.display = 'block';
+            document.getElementById('nbVendidos').textContent = `${vendidos} de ${total}`;
+            document.getElementById('progressBar').style.width = `${percentual}%`;
+            document.getElementById('progressBar').textContent = `${percentual.toFixed(0)}%`;
+            document.getElementById('fatAcumulado').textContent = formatarMoeda(fatAcumulado);
+            document.getElementById('metaTotal').textContent = formatarMoeda(metaTotal);
+            document.getElementById('faltaMeta').textContent = formatarMoeda(Math.max(0, faltaMeta));
+
+            // Calcular preço sugerido para próximas vendas
+            if (restante > 0 && metaTotal > 0) {
+                const precoSugerido = faltaMeta / restante;
+                document.getElementById('sugestaoPreco').style.display = 'block';
+                document.getElementById('markupSugerido').textContent = lote.markupCalculado || 0;
+                document.getElementById('precoSugerido').textContent = formatarMoeda(Math.max(0, precoSugerido));
             } else {
-                document.getElementById('valorPrevisto').style.display = 'none';
+                document.getElementById('sugestaoPreco').style.display = 'none';
             }
         }
 
-        // Registrar venda realizada
+        // Registrar venda
         function registrarVenda(e) {
             e.preventDefault();
 
@@ -733,14 +836,11 @@
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
 
-            // Calcular custos com valor real de venda (para comissões percentuais)
+            // Calcular custos com valor real
             const custos = calcularCustoLote(loteId, valorReal);
-
-            const valorPrevisto = lote.valorPrevistoVenda || 0;
+            const lucroEstaVenda = valorReal - custos.custoPorVenda;
+            const valorPrevisto = lote.valorPrevistoUnidade || 0;
             const diferenca = valorReal - valorPrevisto;
-            const lucroReal = valorReal - custos.custoTotal;
-            const lucroPrevistoCalc = valorPrevisto > 0 ? (valorPrevisto - calcularCustoLote(loteId, valorPrevisto).custoTotal) : 0;
-            const diferencaLucro = lucroReal - lucroPrevistoCalc;
 
             // Criar registro de venda
             const novaVenda = {
@@ -749,25 +849,23 @@
                 valorReal: valorReal,
                 valorPrevisto: valorPrevisto,
                 diferenca: diferenca,
-                custoTotal: custos.custoTotal,
-                lucroReal: lucroReal,
-                lucroPrevistoCalc: lucroPrevistoCalc,
-                diferencaLucro: diferencaLucro,
+                custoUnidade: custos.custoPorVenda,
+                lucroUnidade: lucroEstaVenda,
                 dataVenda: dataVenda,
                 observacoes: obs
             };
 
             dados.vendas.push(novaVenda);
 
-            // Atualizar despesas percentuais com valor calculado
-            dados.despesas.filter(d => d.loteId === loteId && d.isPercentual).forEach(d => {
-                d.valorCalculado = valorReal * d.percentual / 100;
-            });
+            // Atualizar quantidade vendida
+            lote.quantidadeVendida++;
 
             // Atualizar status do lote
-            lote.status = 'Vendido';
-            lote.valorRealVenda = valorReal;
-            lote.dataVenda = dataVenda;
+            if (lote.quantidadeVendida >= lote.quantidade) {
+                lote.status = 'Vendido';
+            } else {
+                lote.status = 'Parcial';
+            }
 
             salvarDados(dados);
 
@@ -775,73 +873,72 @@
             const positivo = diferenca >= 0;
             const icone = positivo ? '📈' : '📉';
 
-            alert(`✅ Venda registrada com sucesso!
+            alert(`✅ Venda registrada!
 
-${icone} Você ${positivo ? 'GANHOU' : 'PERDEU'} ${formatarMoeda(Math.abs(diferenca))} em relação ao previsto!
+${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
+💰 Lucro nesta venda: ${formatarMoeda(lucroEstaVenda)}
 
-Lucro Real: ${formatarMoeda(lucroReal)}`);
+📦 Vendidos: ${lote.quantidadeVendida} de ${lote.quantidade}`);
 
             e.target.reset();
-            document.getElementById('valorPrevisto').style.display = 'none';
+            mostrarProgressoVenda();
             atualizarDashboard();
         }
 
-        // Atualizar select de despesas
+        // Atualizar selects
         function atualizarSelectDespesas() {
             const dados = carregarDados();
-            const lotesPendentes = dados.lotes.filter(l => l.status === 'Pendente');
+            const lotesAtivos = dados.lotes.filter(l => l.status !== 'Vendido');
 
             const selectDespesa = document.getElementById('loteDespesa');
             selectDespesa.innerHTML = '<option value="">Selecione um lote...</option>';
 
-            if (lotesPendentes.length === 0) {
-                document.getElementById('alertaDespesas').innerHTML = '<div class="alerta">⚠️ Você precisa cadastrar um lote primeiro na aba "Nova Compra"</div>';
+            if (lotesAtivos.length === 0) {
+                document.getElementById('alertaDespesas').innerHTML = '<div class="alerta">⚠️ Você precisa cadastrar um lote primeiro</div>';
                 selectDespesa.disabled = true;
             } else {
                 document.getElementById('alertaDespesas').innerHTML = '';
                 selectDespesa.disabled = false;
-                lotesPendentes.forEach(lote => {
+                lotesAtivos.forEach(lote => {
                     selectDespesa.innerHTML += `<option value="${lote.id}">${lote.nome}</option>`;
                 });
             }
         }
 
-        // Atualizar select de cálculo
         function atualizarSelectCalculo() {
             const dados = carregarDados();
-            const lotesPendentes = dados.lotes.filter(l => l.status === 'Pendente');
+            const lotesAtivos = dados.lotes.filter(l => l.status !== 'Vendido');
 
             const selectCalculo = document.getElementById('loteCalculo');
             selectCalculo.innerHTML = '<option value="">Selecione um lote...</option>';
 
-            if (lotesPendentes.length === 0) {
-                document.getElementById('alertaCalculo').innerHTML = '<div class="alerta">⚠️ Você precisa cadastrar um lote primeiro na aba "Nova Compra"</div>';
+            if (lotesAtivos.length === 0) {
+                document.getElementById('alertaCalculo').innerHTML = '<div class="alerta">⚠️ Você precisa cadastrar um lote primeiro</div>';
                 selectCalculo.disabled = true;
             } else {
                 document.getElementById('alertaCalculo').innerHTML = '';
                 selectCalculo.disabled = false;
-                lotesPendentes.forEach(lote => {
+                lotesAtivos.forEach(lote => {
                     selectCalculo.innerHTML += `<option value="${lote.id}">${lote.nome}</option>`;
                 });
             }
         }
 
-        // Atualizar select de vendas
         function atualizarSelectVendas() {
             const dados = carregarDados();
-            const lotesPendentes = dados.lotes.filter(l => l.status === 'Pendente');
+            const lotesAtivos = dados.lotes.filter(l => l.status !== 'Vendido');
 
             const selectVenda = document.getElementById('loteVenda');
             selectVenda.innerHTML = '<option value="">Selecione um lote...</option>';
 
-            if (lotesPendentes.length === 0) {
-                document.getElementById('alertaVendas').innerHTML = '<div class="alerta">⚠️ Você precisa cadastrar um lote primeiro na aba "Nova Compra"</div>';
+            if (lotesAtivos.length === 0) {
+                document.getElementById('alertaVendas').innerHTML = '<div class="alerta">⚠️ Você precisa cadastrar um lote primeiro</div>';
                 selectVenda.disabled = true;
             } else {
                 document.getElementById('alertaVendas').innerHTML = '';
                 selectVenda.disabled = false;
-                lotesPendentes.forEach(lote => {
-                    selectVenda.innerHTML += `<option value="${lote.id}">${lote.nome}</option>`;
+                lotesAtivos.forEach(lote => {
+                    selectVenda.innerHTML += `<option value="${lote.id}">${lote.nome} (${lote.quantidadeVendida}/${lote.quantidade})</option>`;
                 });
             }
         }
@@ -851,20 +948,10 @@ Lucro Real: ${formatarMoeda(lucroReal)}`);
             const dados = carregarDados();
 
             const totalInvestido = dados.lotes.reduce((sum, l) => sum + l.valorCompra, 0);
+            let totalDespesas = dados.despesas.filter(d => !d.porUnidade).reduce((sum, d) => sum + d.valor, 0);
 
-            // Calcular despesas totais incluindo percentuais
-            let totalDespesas = 0;
-            dados.despesas.forEach(d => {
-                if (d.valorCalculado) {
-                    totalDespesas += d.valorCalculado;
-                } else {
-                    totalDespesas += d.valor;
-                }
-            });
-
-            const totalCustos = totalInvestido + totalDespesas;
             const totalVendas = dados.vendas.reduce((sum, v) => sum + v.valorReal, 0);
-            const lucroTotal = totalVendas - dados.vendas.reduce((sum, v) => sum + v.custoTotal, 0);
+            const lucroTotal = dados.vendas.reduce((sum, v) => sum + v.lucroUnidade, 0);
 
             const cards = `
                 <div class="card">
@@ -872,12 +959,12 @@ Lucro Real: ${formatarMoeda(lucroReal)}`);
                     <div class="value">${formatarMoeda(totalInvestido)}</div>
                 </div>
                 <div class="card">
-                    <h3>💸 Total Despesas</h3>
+                    <h3>💸 Despesas Fixas</h3>
                     <div class="value">${formatarMoeda(totalDespesas)}</div>
                 </div>
                 <div class="card">
-                    <h3>📊 Custo Total</h3>
-                    <div class="value">${formatarMoeda(totalCustos)}</div>
+                    <h3>📦 Notebooks Vendidos</h3>
+                    <div class="value">${dados.vendas.length}</div>
                 </div>
                 <div class="card">
                     <h3>💰 Faturamento</h3>
@@ -892,29 +979,25 @@ Lucro Real: ${formatarMoeda(lucroReal)}`);
             document.getElementById('dashboardCards').innerHTML = cards;
 
             // Tabela resumo
-            let tabela = '<table><thead><tr><th>Lote</th><th>Custo Total</th><th>Previsto</th><th>Realizado</th><th>Diferença</th><th>Status</th></tr></thead><tbody>';
+            let tabela = '<table><thead><tr><th>Lote</th><th>Progresso</th><th>Faturado</th><th>Meta</th><th>Falta</th><th>Status</th></tr></thead><tbody>';
 
             if (dados.lotes.length === 0) {
-                tabela += '<tr><td colspan="6" style="text-align:center; padding: 30px;">📦 Nenhum lote cadastrado ainda. Vá em "Nova Compra" para começar!</td></tr>';
+                tabela += '<tr><td colspan="6" style="text-align:center; padding: 30px;">📦 Nenhum lote cadastrado</td></tr>';
             } else {
                 dados.lotes.forEach(lote => {
-                    const venda = dados.vendas.find(v => v.loteId === lote.id);
-                    const valorVenda = venda ? venda.valorReal : 0;
-                    const custos = calcularCustoLote(lote.id, valorVenda);
-                    const valorRealizado = valorVenda;
-                    const valorPrevisto = lote.valorPrevistoVenda || 0;
-                    const diferenca = venda ? venda.diferenca : 0;
-                    const statusClass = lote.status === 'Vendido' ? 'status-vendido' : 'status-pendente';
+                    const vendasLote = dados.vendas.filter(v => v.loteId === lote.id);
+                    const faturado = vendasLote.reduce((sum, v) => sum + v.valorReal, 0);
+                    const meta = lote.valorPrevistoTotal || 0;
+                    const falta = Math.max(0, meta - faturado);
+                    const statusClass = lote.status === 'Vendido' ? 'status-vendido' : (lote.status === 'Parcial' ? 'status-parcial' : 'status-pendente');
 
                     tabela += `
                         <tr>
                             <td>${lote.nome}</td>
-                            <td>${formatarMoeda(custos.custoTotal)}</td>
-                            <td>${valorPrevisto > 0 ? formatarMoeda(valorPrevisto) : '-'}</td>
-                            <td>${valorRealizado > 0 ? formatarMoeda(valorRealizado) : '-'}</td>
-                            <td style="color: ${diferenca >= 0 ? '#00b894' : '#e74c3c'}; font-weight: bold;">
-                                ${venda ? formatarMoeda(diferenca) : '-'}
-                            </td>
+                            <td>${lote.quantidadeVendida}/${lote.quantidade}</td>
+                            <td>${formatarMoeda(faturado)}</td>
+                            <td>${meta > 0 ? formatarMoeda(meta) : '-'}</td>
+                            <td style="color: #e74c3c; font-weight: bold;">${meta > 0 ? formatarMoeda(falta) : '-'}</td>
                             <td><span class="status-badge ${statusClass}">${lote.status}</span></td>
                         </tr>
                     `;
@@ -929,30 +1012,27 @@ Lucro Real: ${formatarMoeda(lucroReal)}`);
         function atualizarTabelaLotes() {
             const dados = carregarDados();
 
-            let html = '<table><thead><tr><th>Lote</th><th>Qtd</th><th>Compra</th><th>Despesas</th><th>Custo Total</th><th>Previsto</th><th>Realizado</th><th>Lucro</th><th>Status</th><th>Ações</th></tr></thead><tbody>';
+            let html = '<table><thead><tr><th>Lote</th><th>Qtd</th><th>Vendidos</th><th>Custo</th><th>Meta</th><th>Faturado</th><th>Lucro</th><th>Status</th><th>Ações</th></tr></thead><tbody>';
 
             if (dados.lotes.length === 0) {
-                html += '<tr><td colspan="10" style="text-align:center; padding: 30px;">📦 Nenhum lote cadastrado ainda. Vá em "Nova Compra" para começar!</td></tr>';
+                html += '<tr><td colspan="9" style="text-align:center; padding: 30px;">📦 Nenhum lote cadastrado</td></tr>';
             } else {
                 dados.lotes.forEach(lote => {
-                    const venda = dados.vendas.find(v => v.loteId === lote.id);
-                    const valorVenda = venda ? venda.valorReal : 0;
-                    const custos = calcularCustoLote(lote.id, valorVenda);
-                    const lucro = venda ? venda.lucroReal : 0;
-                    const statusClass = lote.status === 'Vendido' ? 'status-vendido' : 'status-pendente';
+                    const vendasLote = dados.vendas.filter(v => v.loteId === lote.id);
+                    const custos = calcularCustoLote(lote.id);
+                    const faturado = vendasLote.reduce((sum, v) => sum + v.valorReal, 0);
+                    const lucro = vendasLote.reduce((sum, v) => sum + v.lucroUnidade, 0);
+                    const statusClass = lote.status === 'Vendido' ? 'status-vendido' : (lote.status === 'Parcial' ? 'status-parcial' : 'status-pendente');
 
                     html += `
                         <tr>
                             <td>${lote.nome}</td>
                             <td>${lote.quantidade}</td>
-                            <td>${formatarMoeda(lote.valorCompra)}</td>
-                            <td>${formatarMoeda(custos.totalDespesas)}</td>
-                            <td>${formatarMoeda(custos.custoTotal)}</td>
-                            <td>${lote.valorPrevistoVenda ? formatarMoeda(lote.valorPrevistoVenda) : '-'}</td>
-                            <td>${venda ? formatarMoeda(venda.valorReal) : '-'}</td>
-                            <td style="color: ${lucro >= 0 ? '#00b894' : '#e74c3c'}; font-weight: bold;">
-                                ${venda ? formatarMoeda(lucro) : '-'}
-                            </td>
+                            <td>${lote.quantidadeVendida}</td>
+                            <td>${formatarMoeda(custos.custoTotalLote)}</td>
+                            <td>${lote.valorPrevistoTotal ? formatarMoeda(lote.valorPrevistoTotal) : '-'}</td>
+                            <td>${formatarMoeda(faturado)}</td>
+                            <td style="color: ${lucro >= 0 ? '#00b894' : '#e74c3c'}; font-weight: bold;">${formatarMoeda(lucro)}</td>
                             <td><span class="status-badge ${statusClass}">${lote.status}</span></td>
                             <td><button class="btn-delete" onclick="deletarLote(${lote.id})">🗑️</button></td>
                         </tr>
