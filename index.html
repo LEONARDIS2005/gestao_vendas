@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -43,17 +43,19 @@
             display: flex;
             background: #f5f5f5;
             border-bottom: 2px solid #ddd;
+            flex-wrap: wrap;
         }
 
         .tab {
             flex: 1;
-            padding: 15px;
+            min-width: 120px;
+            padding: 15px 10px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             border: none;
             background: #f5f5f5;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
         }
 
@@ -157,10 +159,11 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            font-size: 14px;
         }
 
         th, td {
-            padding: 12px;
+            padding: 10px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
@@ -205,14 +208,26 @@
             color: #667eea;
         }
 
-        .btn-delete {
-            background: #e74c3c;
-            color: white;
+        .btn-action {
             padding: 6px 12px;
+            margin: 0 3px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
+            color: white;
+        }
+
+        .btn-edit {
+            background: #3498db;
+        }
+
+        .btn-edit:hover {
+            background: #2980b9;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
         }
 
         .btn-delete:hover {
@@ -284,19 +299,6 @@
             transition: width 0.3s;
         }
 
-        .meta-box {
-            background: #fff9e6;
-            border: 2px solid #f39c12;
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 20px;
-        }
-
-        .meta-box h3 {
-            color: #f39c12;
-            margin-bottom: 15px;
-        }
-
         .sugestao-preco {
             background: #d4edda;
             border: 2px solid #28a745;
@@ -310,6 +312,45 @@
             font-size: 2em;
             font-weight: bold;
             color: #28a745;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
         }
     </style>
 </head>
@@ -327,6 +368,7 @@
             <button class="tab" onclick="openTab('calculo')">🧮 Calcular Venda</button>
             <button class="tab" onclick="openTab('vendas')">✅ Registrar Venda</button>
             <button class="tab" onclick="openTab('lotes')">📋 Meus Lotes</button>
+            <button class="tab" onclick="openTab('historico')">📜 Histórico</button>
         </div>
 
         <div class="content">
@@ -341,6 +383,7 @@
             <div id="compra" class="tab-content">
                 <h2>➕ Registrar Nova Compra</h2>
                 <form onsubmit="adicionarCompra(event)">
+                    <input type="hidden" id="editandoLoteId">
                     <div class="form-group">
                         <label>Nome/Identificação do Lote:</label>
                         <input type="text" id="nomeLote" required placeholder="Ex: Lote 01 - Dell Inspiron">
@@ -361,15 +404,17 @@
                         <textarea id="observacoes" rows="3" placeholder="Detalhes, estado dos notebooks, etc."></textarea>
                     </div>
 
-                    <button type="submit">💾 Salvar Compra</button>
+                    <button type="submit" id="btnSalvarLote">💾 Salvar Compra</button>
+                    <button type="button" id="btnCancelarEdicaoLote" class="hidden" onclick="cancelarEdicaoLote()" style="background: #95a5a6;">❌ Cancelar</button>
                 </form>
             </div>
 
             <!-- Despesas -->
             <div id="despesas" class="tab-content">
-                <h2>💰 Adicionar Despesas</h2>
+                <h2>💰 Gerenciar Despesas</h2>
                 <div id="alertaDespesas"></div>
                 <form onsubmit="adicionarDespesa(event)">
+                    <input type="hidden" id="editandoDespesaId">
                     <div class="form-group">
                         <label>Selecione o Lote:</label>
                         <select id="loteDespesa" required></select>
@@ -422,8 +467,12 @@
                         <input type="text" id="descricaoDespesa" placeholder="Ex: Troca de HD, limpeza">
                     </div>
 
-                    <button type="submit">💸 Adicionar Despesa</button>
+                    <button type="submit" id="btnSalvarDespesa">💸 Adicionar Despesa</button>
+                    <button type="button" id="btnCancelarEdicaoDespesa" class="hidden" onclick="cancelarEdicaoDespesa()" style="background: #95a5a6;">❌ Cancelar</button>
                 </form>
+
+                <h3 style="margin-top: 30px;">📋 Despesas Cadastradas</h3>
+                <div id="listaDespesas"></div>
             </div>
 
             <!-- Cálculo de Venda -->
@@ -532,11 +581,43 @@
                 </form>
             </div>
 
+            <!-- Histórico -->
+            <div id="historico" class="tab-content">
+                <h2>📜 Histórico de Vendas</h2>
+                <div id="tabelaHistorico"></div>
+            </div>
+
             <!-- Meus Lotes -->
             <div id="lotes" class="tab-content">
                 <h2>📋 Todos os Lotes</h2>
                 <div id="tabelaLotes"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição de Venda -->
+    <div id="modalEditarVenda" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Editar Venda</h2>
+                <span class="close" onclick="fecharModalVenda()">&times;</span>
+            </div>
+            <form onsubmit="salvarEdicaoVenda(event)">
+                <input type="hidden" id="editVendaId">
+                <div class="form-group">
+                    <label>Valor da Venda (R$):</label>
+                    <input type="number" id="editVendaValor" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Data da Venda:</label>
+                    <input type="date" id="editVendaData" required>
+                </div>
+                <div class="form-group">
+                    <label>Observações:</label>
+                    <textarea id="editVendaObs" rows="3"></textarea>
+                </div>
+                <button type="submit">💾 Salvar Alterações</button>
+            </form>
         </div>
     </div>
 
@@ -564,9 +645,10 @@
             document.getElementById(tabName).classList.add('active');
 
             if (tabName === 'dashboard') atualizarDashboard();
-            if (tabName === 'despesas') atualizarSelectDespesas();
+            if (tabName === 'despesas') { atualizarSelectDespesas(); atualizarListaDespesas(); }
             if (tabName === 'calculo') atualizarSelectCalculo();
             if (tabName === 'vendas') atualizarSelectVendas();
+            if (tabName === 'historico') atualizarHistoricoVendas();
             if (tabName === 'lotes') atualizarTabelaLotes();
         }
 
@@ -606,37 +688,79 @@
             }
         }
 
-        // Adicionar nova compra
+        // Adicionar/Editar compra
         function adicionarCompra(e) {
             e.preventDefault();
 
             const dados = carregarDados();
-            const novoLote = {
-                id: Date.now(),
-                nome: document.getElementById('nomeLote').value,
-                quantidade: parseInt(document.getElementById('quantidade').value),
-                quantidadeVendida: 0,
-                valorCompra: parseFloat(document.getElementById('valorCompra').value),
-                observacoes: document.getElementById('observacoes').value,
-                data: new Date().toLocaleDateString('pt-BR'),
-                status: 'Pendente',
-                markupCalculado: null,
-                valorPrevistoTotal: null
-            };
+            const editandoId = document.getElementById('editandoLoteId').value;
 
-            dados.lotes.push(novoLote);
+            if (editandoId) {
+                // Editando lote existente
+                const lote = dados.lotes.find(l => l.id == editandoId);
+                lote.nome = document.getElementById('nomeLote').value;
+                lote.quantidade = parseInt(document.getElementById('quantidade').value);
+                lote.valorCompra = parseFloat(document.getElementById('valorCompra').value);
+                lote.observacoes = document.getElementById('observacoes').value;
+                alert('✅ Lote atualizado com sucesso!');
+            } else {
+                // Novo lote
+                const novoLote = {
+                    id: Date.now(),
+                    nome: document.getElementById('nomeLote').value,
+                    quantidade: parseInt(document.getElementById('quantidade').value),
+                    quantidadeVendida: 0,
+                    valorCompra: parseFloat(document.getElementById('valorCompra').value),
+                    observacoes: document.getElementById('observacoes').value,
+                    data: new Date().toLocaleDateString('pt-BR'),
+                    status: 'Pendente',
+                    markupCalculado: null,
+                    valorPrevistoTotal: null
+                };
+                dados.lotes.push(novoLote);
+                alert('✅ Lote adicionado com sucesso!');
+            }
+
             salvarDados(dados);
-
-            alert('✅ Lote adicionado com sucesso!');
             e.target.reset();
+            document.getElementById('editandoLoteId').value = '';
+            document.getElementById('btnSalvarLote').textContent = '💾 Salvar Compra';
+            document.getElementById('btnCancelarEdicaoLote').classList.add('hidden');
             atualizarDashboard();
         }
 
-        // Adicionar despesa
+        // Editar lote
+        function editarLote(loteId) {
+            const dados = carregarDados();
+            const lote = dados.lotes.find(l => l.id === loteId);
+
+            document.getElementById('editandoLoteId').value = lote.id;
+            document.getElementById('nomeLote').value = lote.nome;
+            document.getElementById('quantidade').value = lote.quantidade;
+            document.getElementById('valorCompra').value = lote.valorCompra;
+            document.getElementById('observacoes').value = lote.observacoes || '';
+
+            document.getElementById('btnSalvarLote').textContent = '💾 Atualizar Lote';
+            document.getElementById('btnCancelarEdicaoLote').classList.remove('hidden');
+
+            openTab('compra');
+            window.scrollTo(0, 0);
+        }
+
+        // Cancelar edição de lote
+        function cancelarEdicaoLote() {
+            document.getElementById('editandoLoteId').value = '';
+            document.querySelector('#compra form').reset();
+            document.getElementById('btnSalvarLote').textContent = '💾 Salvar Compra';
+            document.getElementById('btnCancelarEdicaoLote').classList.add('hidden');
+        }
+
+        // Adicionar/Editar despesa
         function adicionarDespesa(e) {
             e.preventDefault();
 
             const dados = carregarDados();
+            const editandoId = document.getElementById('editandoDespesaId').value;
             const tipo = document.getElementById('tipoDespesa').value;
             let valor = 0;
             let isPercentual = false;
@@ -655,25 +779,132 @@
                 valor = parseFloat(document.getElementById('valorDespesa').value);
             }
 
-            const novaDespesa = {
-                id: Date.now(),
-                loteId: parseInt(document.getElementById('loteDespesa').value),
-                tipo: tipo,
-                valor: valor,
-                isPercentual: isPercentual,
-                percentual: percentual,
-                porUnidade: tipo === 'Comissão ML',
-                descricao: document.getElementById('descricaoDespesa').value,
-                data: new Date().toLocaleDateString('pt-BR')
-            };
+            if (editandoId) {
+                // Editando despesa existente
+                const despesa = dados.despesas.find(d => d.id == editandoId);
+                despesa.loteId = parseInt(document.getElementById('loteDespesa').value);
+                despesa.tipo = tipo;
+                despesa.valor = valor;
+                despesa.isPercentual = isPercentual;
+                despesa.percentual = percentual;
+                despesa.porUnidade = tipo === 'Comissão ML';
+                despesa.descricao = document.getElementById('descricaoDespesa').value;
+                alert('✅ Despesa atualizada com sucesso!');
+            } else {
+                // Nova despesa
+                const novaDespesa = {
+                    id: Date.now(),
+                    loteId: parseInt(document.getElementById('loteDespesa').value),
+                    tipo: tipo,
+                    valor: valor,
+                    isPercentual: isPercentual,
+                    percentual: percentual,
+                    porUnidade: tipo === 'Comissão ML',
+                    descricao: document.getElementById('descricaoDespesa').value,
+                    data: new Date().toLocaleDateString('pt-BR')
+                };
+                dados.despesas.push(novaDespesa);
+                alert('✅ Despesa adicionada com sucesso!');
+            }
 
-            dados.despesas.push(novaDespesa);
+            salvarDados(dados);
+            e.target.reset();
+            document.getElementById('editandoDespesaId').value = '';
+            document.getElementById('btnSalvarDespesa').textContent = '💸 Adicionar Despesa';
+            document.getElementById('btnCancelarEdicaoDespesa').classList.add('hidden');
+            mostrarCamposComissao();
+            atualizarListaDespesas();
+        }
+
+        // Editar despesa
+        function editarDespesa(despesaId) {
+            const dados = carregarDados();
+            const despesa = dados.despesas.find(d => d.id === despesaId);
+
+            document.getElementById('editandoDespesaId').value = despesa.id;
+            document.getElementById('loteDespesa').value = despesa.loteId;
+            document.getElementById('tipoDespesa').value = despesa.tipo;
+            document.getElementById('descricaoDespesa').value = despesa.descricao || '';
+
+            if (despesa.tipo === 'Comissão ML') {
+                mostrarCamposComissao();
+                if (despesa.isPercentual) {
+                    document.getElementById('tipoComissao').value = 'percentual';
+                    alterarTipoComissao();
+                    document.getElementById('percentualComissao').value = despesa.percentual;
+                } else {
+                    document.getElementById('tipoComissao').value = 'valor';
+                    alterarTipoComissao();
+                    document.getElementById('valorComissaoFixo').value = despesa.valor;
+                }
+            } else {
+                document.getElementById('valorDespesa').value = despesa.valor;
+            }
+
+            document.getElementById('btnSalvarDespesa').textContent = '💾 Atualizar Despesa';
+            document.getElementById('btnCancelarEdicaoDespesa').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        // Cancelar edição de despesa
+        function cancelarEdicaoDespesa() {
+            document.getElementById('editandoDespesaId').value = '';
+            document.querySelector('#despesas form').reset();
+            document.getElementById('btnSalvarDespesa').textContent = '💸 Adicionar Despesa';
+            document.getElementById('btnCancelarEdicaoDespesa').classList.add('hidden');
+            mostrarCamposComissao();
+        }
+
+        // Atualizar lista de despesas
+        function atualizarListaDespesas() {
+            const dados = carregarDados();
+
+            let html = '<table><thead><tr><th>Lote</th><th>Tipo</th><th>Valor</th><th>Descrição</th><th>Data</th><th>Ações</th></tr></thead><tbody>';
+
+            if (dados.despesas.length === 0) {
+                html += '<tr><td colspan="6" style="text-align:center; padding: 30px;">💰 Nenhuma despesa cadastrada</td></tr>';
+            } else {
+                dados.despesas.forEach(despesa => {
+                    const lote = dados.lotes.find(l => l.id === despesa.loteId);
+                    const nomeLote = lote ? lote.nome : 'Lote deletado';
+                    let valorDisplay = '';
+
+                    if (despesa.isPercentual) {
+                        valorDisplay = `${despesa.percentual}% (calculado na venda)`;
+                    } else {
+                        valorDisplay = formatarMoeda(despesa.valor);
+                    }
+
+                    html += `
+                        <tr>
+                            <td>${nomeLote}</td>
+                            <td>${despesa.tipo}</td>
+                            <td>${valorDisplay}</td>
+                            <td>${despesa.descricao || '-'}</td>
+                            <td>${despesa.data}</td>
+                            <td>
+                                <button class="btn-action btn-edit" onclick="editarDespesa(${despesa.id})">✏️ Editar</button>
+                                <button class="btn-action btn-delete" onclick="deletarDespesa(${despesa.id})">🗑️ Excluir</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            html += '</tbody></table>';
+            document.getElementById('listaDespesas').innerHTML = html;
+        }
+
+        // Deletar despesa
+        function deletarDespesa(despesaId) {
+            if (!confirm('Tem certeza que deseja excluir esta despesa?')) return;
+
+            const dados = carregarDados();
+            dados.despesas = dados.despesas.filter(d => d.id !== despesaId);
             salvarDados(dados);
 
-            alert('✅ Despesa adicionada com sucesso!');
-            e.target.reset();
-            mostrarCamposComissao();
-            atualizarSelectDespesas();
+            atualizarListaDespesas();
+            atualizarDashboard();
         }
 
         // Calcular custo total de um lote
@@ -681,7 +912,6 @@
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
             const despesasLote = dados.despesas.filter(d => d.loteId === loteId);
-            const vendasLote = dados.vendas.filter(v => v.loteId === loteId);
 
             let totalDespesasFixas = 0;
             let totalDespesasPorVenda = 0;
@@ -736,17 +966,13 @@
             const markup = parseFloat(document.getElementById('markup').value);
             const custos = calcularCustoLote(loteId);
 
-            // Valor previsto por unidade
             const valorPorUnidade = custos.custoMedioUnidade * (1 + markup / 100);
-
-            // Recalcular considerando despesas por venda
             const custosComVenda = calcularCustoLote(loteId, valorPorUnidade);
             const valorPorUnidadeFinal = custosComVenda.custoPorVenda * (1 + markup / 100);
             const valorTotalLote = valorPorUnidadeFinal * custos.quantidade;
             const lucroTotal = valorTotalLote - (custosComVenda.custoPorVenda * custos.quantidade);
             const lucroPorUnidade = valorPorUnidadeFinal - custosComVenda.custoPorVenda;
 
-            // Salvar cálculo no lote
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
             lote.markupCalculado = markup;
@@ -813,7 +1039,6 @@
             document.getElementById('metaTotal').textContent = formatarMoeda(metaTotal);
             document.getElementById('faltaMeta').textContent = formatarMoeda(Math.max(0, faltaMeta));
 
-            // Calcular preço sugerido para próximas vendas
             if (restante > 0 && metaTotal > 0) {
                 const precoSugerido = faltaMeta / restante;
                 document.getElementById('sugestaoPreco').style.display = 'block';
@@ -836,13 +1061,11 @@
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
 
-            // Calcular custos com valor real
             const custos = calcularCustoLote(loteId, valorReal);
             const lucroEstaVenda = valorReal - custos.custoPorVenda;
             const valorPrevisto = lote.valorPrevistoUnidade || 0;
             const diferenca = valorReal - valorPrevisto;
 
-            // Criar registro de venda
             const novaVenda = {
                 id: Date.now(),
                 loteId: loteId,
@@ -856,11 +1079,8 @@
             };
 
             dados.vendas.push(novaVenda);
-
-            // Atualizar quantidade vendida
             lote.quantidadeVendida++;
 
-            // Atualizar status do lote
             if (lote.quantidadeVendida >= lote.quantidade) {
                 lote.status = 'Vendido';
             } else {
@@ -869,7 +1089,6 @@
 
             salvarDados(dados);
 
-            // Mostrar resultado
             const positivo = diferenca >= 0;
             const icone = positivo ? '📈' : '📉';
 
@@ -883,6 +1102,113 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             e.target.reset();
             mostrarProgressoVenda();
             atualizarDashboard();
+        }
+
+        // Abrir modal de edição de venda
+        function abrirModalEditarVenda(vendaId) {
+            const dados = carregarDados();
+            const venda = dados.vendas.find(v => v.id === vendaId);
+
+            document.getElementById('editVendaId').value = venda.id;
+            document.getElementById('editVendaValor').value = venda.valorReal;
+            document.getElementById('editVendaData').value = venda.dataVenda;
+            document.getElementById('editVendaObs').value = venda.observacoes || '';
+
+            document.getElementById('modalEditarVenda').style.display = 'block';
+        }
+
+        // Fechar modal de venda
+        function fecharModalVenda() {
+            document.getElementById('modalEditarVenda').style.display = 'none';
+        }
+
+        // Salvar edição de venda
+        function salvarEdicaoVenda(e) {
+            e.preventDefault();
+
+            const dados = carregarDados();
+            const vendaId = parseInt(document.getElementById('editVendaId').value);
+            const venda = dados.vendas.find(v => v.id === vendaId);
+
+            const novoValor = parseFloat(document.getElementById('editVendaValor').value);
+
+            // Recalcular custos e lucro
+            const custos = calcularCustoLote(venda.loteId, novoValor);
+
+            venda.valorReal = novoValor;
+            venda.dataVenda = document.getElementById('editVendaData').value;
+            venda.observacoes = document.getElementById('editVendaObs').value;
+            venda.custoUnidade = custos.custoPorVenda;
+            venda.lucroUnidade = novoValor - custos.custoPorVenda;
+            venda.diferenca = novoValor - venda.valorPrevisto;
+
+            salvarDados(dados);
+            fecharModalVenda();
+            alert('✅ Venda atualizada com sucesso!');
+            atualizarHistoricoVendas();
+            atualizarDashboard();
+        }
+
+        // Deletar venda
+        function deletarVenda(vendaId) {
+            if (!confirm('Tem certeza que deseja excluir esta venda?')) return;
+
+            const dados = carregarDados();
+            const venda = dados.vendas.find(v => v.id === vendaId);
+            const lote = dados.lotes.find(l => l.id === venda.loteId);
+
+            // Reduzir quantidade vendida
+            lote.quantidadeVendida--;
+
+            // Atualizar status
+            if (lote.quantidadeVendida === 0) {
+                lote.status = 'Pendente';
+            } else if (lote.quantidadeVendida < lote.quantidade) {
+                lote.status = 'Parcial';
+            }
+
+            dados.vendas = dados.vendas.filter(v => v.id !== vendaId);
+            salvarDados(dados);
+
+            alert('✅ Venda excluída com sucesso!');
+            atualizarHistoricoVendas();
+            atualizarDashboard();
+        }
+
+        // Atualizar histórico de vendas
+        function atualizarHistoricoVendas() {
+            const dados = carregarDados();
+
+            let html = '<table><thead><tr><th>Lote</th><th>Data</th><th>Valor Venda</th><th>Previsto</th><th>Diferença</th><th>Lucro</th><th>Obs</th><th>Ações</th></tr></thead><tbody>';
+
+            if (dados.vendas.length === 0) {
+                html += '<tr><td colspan="8" style="text-align:center; padding: 30px;">📜 Nenhuma venda registrada</td></tr>';
+            } else {
+                dados.vendas.sort((a, b) => new Date(b.dataVenda) - new Date(a.dataVenda)).forEach(venda => {
+                    const lote = dados.lotes.find(l => l.id === venda.loteId);
+                    const nomeLote = lote ? lote.nome : 'Lote deletado';
+                    const corDif = venda.diferenca >= 0 ? '#00b894' : '#e74c3c';
+
+                    html += `
+                        <tr>
+                            <td>${nomeLote}</td>
+                            <td>${venda.dataVenda}</td>
+                            <td>${formatarMoeda(venda.valorReal)}</td>
+                            <td>${formatarMoeda(venda.valorPrevisto)}</td>
+                            <td style="color: ${corDif}; font-weight: bold;">${formatarMoeda(venda.diferenca)}</td>
+                            <td style="color: #00b894; font-weight: bold;">${formatarMoeda(venda.lucroUnidade)}</td>
+                            <td>${venda.observacoes || '-'}</td>
+                            <td>
+                                <button class="btn-action btn-edit" onclick="abrirModalEditarVenda(${venda.id})">✏️</button>
+                                <button class="btn-action btn-delete" onclick="deletarVenda(${venda.id})">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            html += '</tbody></table>';
+            document.getElementById('tabelaHistorico').innerHTML = html;
         }
 
         // Atualizar selects
@@ -978,7 +1304,6 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
 
             document.getElementById('dashboardCards').innerHTML = cards;
 
-            // Tabela resumo
             let tabela = '<table><thead><tr><th>Lote</th><th>Progresso</th><th>Faturado</th><th>Meta</th><th>Falta</th><th>Status</th></tr></thead><tbody>';
 
             if (dados.lotes.length === 0) {
@@ -1034,7 +1359,10 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
                             <td>${formatarMoeda(faturado)}</td>
                             <td style="color: ${lucro >= 0 ? '#00b894' : '#e74c3c'}; font-weight: bold;">${formatarMoeda(lucro)}</td>
                             <td><span class="status-badge ${statusClass}">${lote.status}</span></td>
-                            <td><button class="btn-delete" onclick="deletarLote(${lote.id})">🗑️</button></td>
+                            <td>
+                                <button class="btn-action btn-edit" onclick="editarLote(${lote.id})">✏️</button>
+                                <button class="btn-action btn-delete" onclick="deletarLote(${lote.id})">🗑️</button>
+                            </td>
                         </tr>
                     `;
                 });
@@ -1046,7 +1374,7 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
 
         // Deletar lote
         function deletarLote(loteId) {
-            if (!confirm('Tem certeza que deseja deletar este lote?')) return;
+            if (!confirm('Tem certeza que deseja deletar este lote? Todas as vendas e despesas relacionadas também serão excluídas.')) return;
 
             const dados = carregarDados();
             dados.lotes = dados.lotes.filter(l => l.id !== loteId);
@@ -1061,6 +1389,14 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
         // Formatar moeda
         function formatarMoeda(valor) {
             return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('modalEditarVenda');
+            if (event.target == modal) {
+                fecharModalVenda();
+            }
         }
 
         // Inicializar
