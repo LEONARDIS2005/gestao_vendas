@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Notebooks - Leilão</title>
     <style>
         * {
@@ -241,6 +241,26 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #2c3e50;
+        }
     </style>
 </head>
 <body>
@@ -307,7 +327,7 @@
 
                     <div class="form-group">
                         <label>Tipo de Despesa:</label>
-                        <select id="tipoDespesa" required>
+                        <select id="tipoDespesa" required onchange="mostrarCamposComissao()">
                             <option value="">Selecione...</option>
                             <option value="Manutenção">Manutenção/Reparo</option>
                             <option value="Comissão ML">Comissão Mercado Livre</option>
@@ -317,9 +337,34 @@
                         </select>
                     </div>
 
-                    <div class="form-group">
+                    <!-- Campos para Comissão ML -->
+                    <div id="camposComissaoML" class="hidden">
+                        <div class="form-group">
+                            <label>Tipo de Comissão:</label>
+                            <select id="tipoComissao" onchange="alterarTipoComissao()">
+                                <option value="valor">Valor Fixo (R$)</option>
+                                <option value="percentual">Percentual (%)</option>
+                            </select>
+                        </div>
+
+                        <div id="comissaoValor" class="form-group">
+                            <label>Valor da Comissão (R$):</label>
+                            <input type="number" id="valorComissaoFixo" step="0.01" min="0" placeholder="Ex: 50.00">
+                        </div>
+
+                        <div id="comissaoPercentual" class="form-group hidden">
+                            <label>Percentual da Comissão (%):</label>
+                            <input type="number" id="percentualComissao" step="0.01" min="0" max="100" placeholder="Ex: 15">
+                            <div class="info-box">
+                                ℹ️ O valor será calculado automaticamente quando você registrar a venda
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campo para outros tipos de despesa -->
+                    <div id="campoValorDespesa" class="form-group">
                         <label>Valor da Despesa (R$):</label>
-                        <input type="number" id="valorDespesa" required step="0.01" min="0" placeholder="Ex: 150.00">
+                        <input type="number" id="valorDespesa" step="0.01" min="0" placeholder="Ex: 150.00">
                     </div>
 
                     <div class="form-group">
@@ -354,6 +399,9 @@
                         <div class="resultado-item">
                             <span>Custo Total:</span>
                             <span id="custoTotal">R$ 0,00</span>
+                        </div>
+                        <div id="avisoComissaoPercentual" class="info-box hidden">
+                            ⚠️ Este lote tem comissão do ML em percentual. O valor será descontado do lucro final após a venda.
                         </div>
                     </div>
 
@@ -447,6 +495,42 @@
             if (tabName === 'lotes') atualizarTabelaLotes();
         }
 
+        // Mostrar/ocultar campos de comissão ML
+        function mostrarCamposComissao() {
+            const tipo = document.getElementById('tipoDespesa').value;
+            const camposML = document.getElementById('camposComissaoML');
+            const campoValor = document.getElementById('campoValorDespesa');
+
+            if (tipo === 'Comissão ML') {
+                camposML.classList.remove('hidden');
+                campoValor.classList.add('hidden');
+                document.getElementById('valorDespesa').required = false;
+            } else {
+                camposML.classList.add('hidden');
+                campoValor.classList.remove('hidden');
+                document.getElementById('valorDespesa').required = true;
+            }
+        }
+
+        // Alternar entre valor fixo e percentual
+        function alterarTipoComissao() {
+            const tipo = document.getElementById('tipoComissao').value;
+            const campoValor = document.getElementById('comissaoValor');
+            const campoPercentual = document.getElementById('comissaoPercentual');
+
+            if (tipo === 'valor') {
+                campoValor.classList.remove('hidden');
+                campoPercentual.classList.add('hidden');
+                document.getElementById('valorComissaoFixo').required = true;
+                document.getElementById('percentualComissao').required = false;
+            } else {
+                campoValor.classList.add('hidden');
+                campoPercentual.classList.remove('hidden');
+                document.getElementById('valorComissaoFixo').required = false;
+                document.getElementById('percentualComissao').required = true;
+            }
+        }
+
         // Adicionar nova compra
         function adicionarCompra(e) {
             e.preventDefault();
@@ -477,11 +561,31 @@
             e.preventDefault();
 
             const dados = carregarDados();
+            const tipo = document.getElementById('tipoDespesa').value;
+            let valor = 0;
+            let isPercentual = false;
+            let percentual = 0;
+
+            if (tipo === 'Comissão ML') {
+                const tipoComissao = document.getElementById('tipoComissao').value;
+                if (tipoComissao === 'valor') {
+                    valor = parseFloat(document.getElementById('valorComissaoFixo').value);
+                } else {
+                    isPercentual = true;
+                    percentual = parseFloat(document.getElementById('percentualComissao').value);
+                    valor = 0; // Será calculado na venda
+                }
+            } else {
+                valor = parseFloat(document.getElementById('valorDespesa').value);
+            }
+
             const novaDespesa = {
                 id: Date.now(),
                 loteId: parseInt(document.getElementById('loteDespesa').value),
-                tipo: document.getElementById('tipoDespesa').value,
-                valor: parseFloat(document.getElementById('valorDespesa').value),
+                tipo: tipo,
+                valor: valor,
+                isPercentual: isPercentual,
+                percentual: percentual,
                 descricao: document.getElementById('descricaoDespesa').value,
                 data: new Date().toLocaleDateString('pt-BR')
             };
@@ -491,20 +595,35 @@
 
             alert('✅ Despesa adicionada com sucesso!');
             e.target.reset();
+            mostrarCamposComissao(); // Reset campos
             atualizarSelectDespesas();
         }
 
         // Calcular custo total de um lote
-        function calcularCustoLote(loteId) {
+        function calcularCustoLote(loteId, valorVenda = 0) {
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
             const despesasLote = dados.despesas.filter(d => d.loteId === loteId);
-            const totalDespesas = despesasLote.reduce((sum, d) => sum + d.valor, 0);
+
+            let totalDespesas = 0;
+            let temComissaoPercentual = false;
+
+            despesasLote.forEach(d => {
+                if (d.isPercentual && valorVenda > 0) {
+                    // Calcular comissão percentual
+                    totalDespesas += (valorVenda * d.percentual / 100);
+                } else if (!d.isPercentual) {
+                    totalDespesas += d.valor;
+                } else if (d.isPercentual) {
+                    temComissaoPercentual = true;
+                }
+            });
 
             return {
                 valorCompra: lote.valorCompra,
                 totalDespesas: totalDespesas,
-                custoTotal: lote.valorCompra + totalDespesas
+                custoTotal: lote.valorCompra + totalDespesas,
+                temComissaoPercentual: temComissaoPercentual
             };
         }
 
@@ -518,6 +637,13 @@
             document.getElementById('custoCompra').textContent = formatarMoeda(custos.valorCompra);
             document.getElementById('custoDespesas').textContent = formatarMoeda(custos.totalDespesas);
             document.getElementById('custoTotal').textContent = formatarMoeda(custos.custoTotal);
+
+            const aviso = document.getElementById('avisoComissaoPercentual');
+            if (custos.temComissaoPercentual) {
+                aviso.classList.remove('hidden');
+            } else {
+                aviso.classList.add('hidden');
+            }
         }
 
         // Calcular venda
@@ -529,22 +655,31 @@
             const custos = calcularCustoLote(loteId);
 
             const valorVenda = custos.custoTotal * (1 + markup / 100);
-            const lucro = valorVenda - custos.custoTotal;
-            const margemLucro = (lucro / valorVenda) * 100;
+
+            // Recalcular com o valor de venda para comissões percentuais
+            const custosComVenda = calcularCustoLote(loteId, valorVenda);
+            const valorVendaFinal = custosComVenda.custoTotal * (1 + markup / 100);
+            const lucro = valorVendaFinal - custosComVenda.custoTotal;
+            const margemLucro = (lucro / valorVendaFinal) * 100;
 
             // Salvar o cálculo no lote
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
             lote.markupCalculado = markup;
-            lote.valorPrevistoVenda = valorVenda;
+            lote.valorPrevistoVenda = valorVendaFinal;
             salvarDados(dados);
+
+            let avisoComissao = '';
+            if (custos.temComissaoPercentual) {
+                avisoComissao = '<div class="info-box">ℹ️ Este cálculo já inclui a comissão do ML em percentual aplicada sobre o valor de venda.</div>';
+            }
 
             const resultado = `
                 <div class="resultado">
                     <h3>💰 Resultado do Cálculo</h3>
                     <div class="resultado-item">
                         <span>Custo Total do Lote:</span>
-                        <span>${formatarMoeda(custos.custoTotal)}</span>
+                        <span>${formatarMoeda(custosComVenda.custoTotal)}</span>
                     </div>
                     <div class="resultado-item">
                         <span>Markup Aplicado:</span>
@@ -552,7 +687,7 @@
                     </div>
                     <div class="resultado-item">
                         <span>Valor de Venda do Lote:</span>
-                        <span>${formatarMoeda(valorVenda)}</span>
+                        <span>${formatarMoeda(valorVendaFinal)}</span>
                     </div>
                     <div class="resultado-item">
                         <span>Lucro Previsto:</span>
@@ -562,6 +697,7 @@
                         <span>Margem de Lucro:</span>
                         <span>${margemLucro.toFixed(2)}%</span>
                     </div>
+                    ${avisoComissao}
                 </div>
             `;
 
@@ -596,12 +732,14 @@
 
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
-            const custos = calcularCustoLote(loteId);
+
+            // Calcular custos com valor real de venda (para comissões percentuais)
+            const custos = calcularCustoLote(loteId, valorReal);
 
             const valorPrevisto = lote.valorPrevistoVenda || 0;
             const diferenca = valorReal - valorPrevisto;
             const lucroReal = valorReal - custos.custoTotal;
-            const lucroPrevistoCalc = valorPrevisto - custos.custoTotal;
+            const lucroPrevistoCalc = valorPrevisto > 0 ? (valorPrevisto - calcularCustoLote(loteId, valorPrevisto).custoTotal) : 0;
             const diferencaLucro = lucroReal - lucroPrevistoCalc;
 
             // Criar registro de venda
@@ -621,6 +759,11 @@
 
             dados.vendas.push(novaVenda);
 
+            // Atualizar despesas percentuais com valor calculado
+            dados.despesas.filter(d => d.loteId === loteId && d.isPercentual).forEach(d => {
+                d.valorCalculado = valorReal * d.percentual / 100;
+            });
+
             // Atualizar status do lote
             lote.status = 'Vendido';
             lote.valorRealVenda = valorReal;
@@ -634,7 +777,9 @@
 
             alert(`✅ Venda registrada com sucesso!
 
-${icone} Você ${positivo ? 'GANHOU' : 'PERDEU'} ${formatarMoeda(Math.abs(diferenca))} em relação ao previsto!`);
+${icone} Você ${positivo ? 'GANHOU' : 'PERDEU'} ${formatarMoeda(Math.abs(diferenca))} em relação ao previsto!
+
+Lucro Real: ${formatarMoeda(lucroReal)}`);
 
             e.target.reset();
             document.getElementById('valorPrevisto').style.display = 'none';
@@ -706,7 +851,17 @@ ${icone} Você ${positivo ? 'GANHOU' : 'PERDEU'} ${formatarMoeda(Math.abs(difere
             const dados = carregarDados();
 
             const totalInvestido = dados.lotes.reduce((sum, l) => sum + l.valorCompra, 0);
-            const totalDespesas = dados.despesas.reduce((sum, d) => sum + d.valor, 0);
+
+            // Calcular despesas totais incluindo percentuais
+            let totalDespesas = 0;
+            dados.despesas.forEach(d => {
+                if (d.valorCalculado) {
+                    totalDespesas += d.valorCalculado;
+                } else {
+                    totalDespesas += d.valor;
+                }
+            });
+
             const totalCustos = totalInvestido + totalDespesas;
             const totalVendas = dados.vendas.reduce((sum, v) => sum + v.valorReal, 0);
             const lucroTotal = totalVendas - dados.vendas.reduce((sum, v) => sum + v.custoTotal, 0);
@@ -743,9 +898,10 @@ ${icone} Você ${positivo ? 'GANHOU' : 'PERDEU'} ${formatarMoeda(Math.abs(difere
                 tabela += '<tr><td colspan="6" style="text-align:center; padding: 30px;">📦 Nenhum lote cadastrado ainda. Vá em "Nova Compra" para começar!</td></tr>';
             } else {
                 dados.lotes.forEach(lote => {
-                    const custos = calcularCustoLote(lote.id);
                     const venda = dados.vendas.find(v => v.loteId === lote.id);
-                    const valorRealizado = venda ? venda.valorReal : 0;
+                    const valorVenda = venda ? venda.valorReal : 0;
+                    const custos = calcularCustoLote(lote.id, valorVenda);
+                    const valorRealizado = valorVenda;
                     const valorPrevisto = lote.valorPrevistoVenda || 0;
                     const diferenca = venda ? venda.diferenca : 0;
                     const statusClass = lote.status === 'Vendido' ? 'status-vendido' : 'status-pendente';
@@ -779,8 +935,9 @@ ${icone} Você ${positivo ? 'GANHOU' : 'PERDEU'} ${formatarMoeda(Math.abs(difere
                 html += '<tr><td colspan="10" style="text-align:center; padding: 30px;">📦 Nenhum lote cadastrado ainda. Vá em "Nova Compra" para começar!</td></tr>';
             } else {
                 dados.lotes.forEach(lote => {
-                    const custos = calcularCustoLote(lote.id);
                     const venda = dados.vendas.find(v => v.loteId === lote.id);
+                    const valorVenda = venda ? venda.valorReal : 0;
+                    const custos = calcularCustoLote(lote.id, valorVenda);
                     const lucro = venda ? venda.lucroReal : 0;
                     const statusClass = lote.status === 'Vendido' ? 'status-vendido' : 'status-pendente';
 
