@@ -362,13 +362,13 @@
         </header>
 
         <div class="tabs">
-            <button class="tab active" onclick="openTab('dashboard')">📊 Dashboard</button>
-            <button class="tab" onclick="openTab('compra')">➕ Nova Compra</button>
-            <button class="tab" onclick="openTab('despesas')">💰 Despesas</button>
-            <button class="tab" onclick="openTab('calculo')">🧮 Calcular Venda</button>
-            <button class="tab" onclick="openTab('vendas')">✅ Registrar Venda</button>
-            <button class="tab" onclick="openTab('lotes')">📋 Meus Lotes</button>
-            <button class="tab" onclick="openTab('historico')">📜 Histórico</button>
+            <button class="tab active" onclick="openTab(event, 'dashboard')">📊 Dashboard</button>
+            <button class="tab" onclick="openTab(event, 'compra')">➕ Nova Compra</button>
+            <button class="tab" onclick="openTab(event, 'despesas')">💰 Despesas</button>
+            <button class="tab" onclick="openTab(event, 'calculo')">🧮 Calcular Venda</button>
+            <button class="tab" onclick="openTab(event, 'vendas')">✅ Registrar Venda</button>
+            <button class="tab" onclick="openTab(event, 'lotes')">📋 Meus Lotes</button>
+            <button class="tab" onclick="openTab(event, 'historico')">📜 Histórico</button>
         </div>
 
         <div class="content">
@@ -633,19 +633,23 @@
             localStorage.setItem('gestaoNotebooks', JSON.stringify(dados));
         }
 
-        // Trocar entre abas
-        function openTab(tabName) {
+        // Trocar entre abas - CORRIGIDO
+        function openTab(event, tabName) {
             const tabs = document.querySelectorAll('.tab');
             const contents = document.querySelectorAll('.tab-content');
 
             tabs.forEach(t => t.classList.remove('active'));
             contents.forEach(c => c.classList.remove('active'));
 
-            event.target.classList.add('active');
+            event.currentTarget.classList.add('active');
             document.getElementById(tabName).classList.add('active');
 
+            // Atualizar conteúdo baseado na aba
             if (tabName === 'dashboard') atualizarDashboard();
-            if (tabName === 'despesas') { atualizarSelectDespesas(); atualizarListaDespesas(); }
+            if (tabName === 'despesas') { 
+                atualizarSelectDespesas(); 
+                atualizarListaDespesas(); 
+            }
             if (tabName === 'calculo') atualizarSelectCalculo();
             if (tabName === 'vendas') atualizarSelectVendas();
             if (tabName === 'historico') atualizarHistoricoVendas();
@@ -696,7 +700,6 @@
             const editandoId = document.getElementById('editandoLoteId').value;
 
             if (editandoId) {
-                // Editando lote existente
                 const lote = dados.lotes.find(l => l.id == editandoId);
                 lote.nome = document.getElementById('nomeLote').value;
                 lote.quantidade = parseInt(document.getElementById('quantidade').value);
@@ -704,7 +707,6 @@
                 lote.observacoes = document.getElementById('observacoes').value;
                 alert('✅ Lote atualizado com sucesso!');
             } else {
-                // Novo lote
                 const novoLote = {
                     id: Date.now(),
                     nome: document.getElementById('nomeLote').value,
@@ -743,7 +745,8 @@
             document.getElementById('btnSalvarLote').textContent = '💾 Atualizar Lote';
             document.getElementById('btnCancelarEdicaoLote').classList.remove('hidden');
 
-            openTab('compra');
+            // Simular clique na aba
+            document.querySelectorAll('.tab')[1].click();
             window.scrollTo(0, 0);
         }
 
@@ -780,7 +783,6 @@
             }
 
             if (editandoId) {
-                // Editando despesa existente
                 const despesa = dados.despesas.find(d => d.id == editandoId);
                 despesa.loteId = parseInt(document.getElementById('loteDespesa').value);
                 despesa.tipo = tipo;
@@ -791,7 +793,6 @@
                 despesa.descricao = document.getElementById('descricaoDespesa').value;
                 alert('✅ Despesa atualizada com sucesso!');
             } else {
-                // Nova despesa
                 const novaDespesa = {
                     id: Date.now(),
                     loteId: parseInt(document.getElementById('loteDespesa').value),
@@ -911,6 +912,8 @@
         function calcularCustoLote(loteId, valorVendaUnidade = 0) {
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
+            if (!lote) return null;
+
             const despesasLote = dados.despesas.filter(d => d.loteId === loteId);
 
             let totalDespesasFixas = 0;
@@ -950,6 +953,8 @@
             if (!loteId) return;
 
             const custos = calcularCustoLote(loteId);
+            if (!custos) return;
+
             document.getElementById('custoAtual').style.display = 'block';
             document.getElementById('custoCompra').textContent = formatarMoeda(custos.valorCompra);
             document.getElementById('custoDespesas').textContent = formatarMoeda(custos.totalDespesasFixas);
@@ -965,6 +970,7 @@
             const loteId = parseInt(document.getElementById('loteCalculo').value);
             const markup = parseFloat(document.getElementById('markup').value);
             const custos = calcularCustoLote(loteId);
+            if (!custos) return;
 
             const valorPorUnidade = custos.custoMedioUnidade * (1 + markup / 100);
             const custosComVenda = calcularCustoLote(loteId, valorPorUnidade);
@@ -1100,6 +1106,7 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
 📦 Vendidos: ${lote.quantidadeVendida} de ${lote.quantidade}`);
 
             e.target.reset();
+            document.getElementById('dataVenda').valueAsDate = new Date();
             mostrarProgressoVenda();
             atualizarDashboard();
         }
@@ -1131,8 +1138,6 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             const venda = dados.vendas.find(v => v.id === vendaId);
 
             const novoValor = parseFloat(document.getElementById('editVendaValor').value);
-
-            // Recalcular custos e lucro
             const custos = calcularCustoLote(venda.loteId, novoValor);
 
             venda.valorReal = novoValor;
@@ -1157,10 +1162,8 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             const venda = dados.vendas.find(v => v.id === vendaId);
             const lote = dados.lotes.find(l => l.id === venda.loteId);
 
-            // Reduzir quantidade vendida
             lote.quantidadeVendida--;
 
-            // Atualizar status
             if (lote.quantidadeVendida === 0) {
                 lote.status = 'Pendente';
             } else if (lote.quantidadeVendida < lote.quantidade) {
@@ -1211,7 +1214,7 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             document.getElementById('tabelaHistorico').innerHTML = html;
         }
 
-        // Atualizar selects
+        // Atualizar selects - CORRIGIDO
         function atualizarSelectDespesas() {
             const dados = carregarDados();
             const lotesAtivos = dados.lotes.filter(l => l.status !== 'Vendido');
@@ -1354,7 +1357,7 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
                             <td>${lote.nome}</td>
                             <td>${lote.quantidade}</td>
                             <td>${lote.quantidadeVendida}</td>
-                            <td>${formatarMoeda(custos.custoTotalLote)}</td>
+                            <td>${custos ? formatarMoeda(custos.custoTotalLote) : '-'}</td>
                             <td>${lote.valorPrevistoTotal ? formatarMoeda(lote.valorPrevistoTotal) : '-'}</td>
                             <td>${formatarMoeda(faturado)}</td>
                             <td style="color: ${lucro >= 0 ? '#00b894' : '#e74c3c'}; font-weight: bold;">${formatarMoeda(lucro)}</td>
@@ -1382,6 +1385,7 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             dados.vendas = dados.vendas.filter(v => v.loteId !== loteId);
             salvarDados(dados);
 
+            alert('✅ Lote excluído com sucesso!');
             atualizarTabelaLotes();
             atualizarDashboard();
         }
