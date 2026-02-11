@@ -48,24 +48,26 @@
 
         .tab {
             flex: 1;
-            min-width: 120px;
-            padding: 15px 10px;
+            min-width: 130px;
+            padding: 20px 12px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             border: none;
             background: #f5f5f5;
-            font-size: 14px;
+            font-size: 17px;
             font-weight: 600;
+            line-height: 1.5;
         }
 
         .tab:hover {
             background: #e0e0e0;
+            transform: translateY(-2px);
         }
 
         .tab.active {
             background: white;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 4px solid #667eea;
             color: #667eea;
         }
 
@@ -622,18 +624,15 @@
     </div>
 
     <script>
-        // Carregar dados do localStorage
         function carregarDados() {
             const dados = localStorage.getItem('gestaoNotebooks');
             return dados ? JSON.parse(dados) : { lotes: [], despesas: [], vendas: [] };
         }
 
-        // Salvar dados no localStorage
         function salvarDados(dados) {
             localStorage.setItem('gestaoNotebooks', JSON.stringify(dados));
         }
 
-        // Trocar entre abas - CORRIGIDO
         function openTab(event, tabName) {
             const tabs = document.querySelectorAll('.tab');
             const contents = document.querySelectorAll('.tab-content');
@@ -644,7 +643,6 @@
             event.currentTarget.classList.add('active');
             document.getElementById(tabName).classList.add('active');
 
-            // Atualizar conteúdo baseado na aba
             if (tabName === 'dashboard') atualizarDashboard();
             if (tabName === 'despesas') { 
                 atualizarSelectDespesas(); 
@@ -656,7 +654,6 @@
             if (tabName === 'lotes') atualizarTabelaLotes();
         }
 
-        // Mostrar/ocultar campos de comissão ML
         function mostrarCamposComissao() {
             const tipo = document.getElementById('tipoDespesa').value;
             const camposML = document.getElementById('camposComissaoML');
@@ -673,7 +670,6 @@
             }
         }
 
-        // Alternar entre valor fixo e percentual
         function alterarTipoComissao() {
             const tipo = document.getElementById('tipoComissao').value;
             const campoValor = document.getElementById('comissaoValor');
@@ -692,7 +688,6 @@
             }
         }
 
-        // Adicionar/Editar compra
         function adicionarCompra(e) {
             e.preventDefault();
 
@@ -731,7 +726,6 @@
             atualizarDashboard();
         }
 
-        // Editar lote
         function editarLote(loteId) {
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
@@ -745,12 +739,10 @@
             document.getElementById('btnSalvarLote').textContent = '💾 Atualizar Lote';
             document.getElementById('btnCancelarEdicaoLote').classList.remove('hidden');
 
-            // Simular clique na aba
             document.querySelectorAll('.tab')[1].click();
             window.scrollTo(0, 0);
         }
 
-        // Cancelar edição de lote
         function cancelarEdicaoLote() {
             document.getElementById('editandoLoteId').value = '';
             document.querySelector('#compra form').reset();
@@ -758,7 +750,6 @@
             document.getElementById('btnCancelarEdicaoLote').classList.add('hidden');
         }
 
-        // Adicionar/Editar despesa
         function adicionarDespesa(e) {
             e.preventDefault();
 
@@ -817,7 +808,6 @@
             atualizarListaDespesas();
         }
 
-        // Editar despesa
         function editarDespesa(despesaId) {
             const dados = carregarDados();
             const despesa = dados.despesas.find(d => d.id === despesaId);
@@ -847,7 +837,6 @@
             window.scrollTo(0, 0);
         }
 
-        // Cancelar edição de despesa
         function cancelarEdicaoDespesa() {
             document.getElementById('editandoDespesaId').value = '';
             document.querySelector('#despesas form').reset();
@@ -856,7 +845,6 @@
             mostrarCamposComissao();
         }
 
-        // Atualizar lista de despesas
         function atualizarListaDespesas() {
             const dados = carregarDados();
 
@@ -896,7 +884,6 @@
             document.getElementById('listaDespesas').innerHTML = html;
         }
 
-        // Deletar despesa
         function deletarDespesa(despesaId) {
             if (!confirm('Tem certeza que deseja excluir esta despesa?')) return;
 
@@ -908,7 +895,6 @@
             atualizarDashboard();
         }
 
-        // Calcular custo total de um lote
         function calcularCustoLote(loteId, valorVendaUnidade = 0) {
             const dados = carregarDados();
             const lote = dados.lotes.find(l => l.id === loteId);
@@ -947,7 +933,6 @@
             };
         }
 
-        // Mostrar custo atual
         function mostrarCustoAtual() {
             const loteId = parseInt(document.getElementById('loteCalculo').value);
             if (!loteId) return;
@@ -963,7 +948,6 @@
             document.getElementById('custoMedio').textContent = formatarMoeda(custos.custoMedioUnidade);
         }
 
-        // Calcular venda
         function calcularVenda(e) {
             e.preventDefault();
 
@@ -1019,7 +1003,6 @@
             document.getElementById('resultadoCalculo').innerHTML = resultado;
         }
 
-        // Mostrar progresso da venda
         function mostrarProgressoVenda() {
             const loteId = parseInt(document.getElementById('loteVenda').value);
             if (!loteId) return;
@@ -1055,7 +1038,6 @@
             }
         }
 
-        // Registrar venda
         function registrarVenda(e) {
             e.preventDefault();
 
@@ -1111,7 +1093,6 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             atualizarDashboard();
         }
 
-        // Abrir modal de edição de venda
         function abrirModalEditarVenda(vendaId) {
             const dados = carregarDados();
             const venda = dados.vendas.find(v => v.id === vendaId);
@@ -1124,12 +1105,10 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             document.getElementById('modalEditarVenda').style.display = 'block';
         }
 
-        // Fechar modal de venda
         function fecharModalVenda() {
             document.getElementById('modalEditarVenda').style.display = 'none';
         }
 
-        // Salvar edição de venda
         function salvarEdicaoVenda(e) {
             e.preventDefault();
 
@@ -1154,7 +1133,6 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             atualizarDashboard();
         }
 
-        // Deletar venda
         function deletarVenda(vendaId) {
             if (!confirm('Tem certeza que deseja excluir esta venda?')) return;
 
@@ -1178,7 +1156,6 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             atualizarDashboard();
         }
 
-        // Atualizar histórico de vendas
         function atualizarHistoricoVendas() {
             const dados = carregarDados();
 
@@ -1214,7 +1191,6 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             document.getElementById('tabelaHistorico').innerHTML = html;
         }
 
-        // Atualizar selects - CORRIGIDO
         function atualizarSelectDespesas() {
             const dados = carregarDados();
             const lotesAtivos = dados.lotes.filter(l => l.status !== 'Vendido');
@@ -1272,7 +1248,6 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             }
         }
 
-        // Atualizar dashboard
         function atualizarDashboard() {
             const dados = carregarDados();
 
@@ -1336,7 +1311,6 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             document.getElementById('dashboardTable').innerHTML = tabela;
         }
 
-        // Atualizar tabela de lotes
         function atualizarTabelaLotes() {
             const dados = carregarDados();
 
@@ -1375,7 +1349,6 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             document.getElementById('tabelaLotes').innerHTML = html;
         }
 
-        // Deletar lote
         function deletarLote(loteId) {
             if (!confirm('Tem certeza que deseja deletar este lote? Todas as vendas e despesas relacionadas também serão excluídas.')) return;
 
@@ -1390,12 +1363,10 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             atualizarDashboard();
         }
 
-        // Formatar moeda
         function formatarMoeda(valor) {
             return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
 
-        // Fechar modal ao clicar fora
         window.onclick = function(event) {
             const modal = document.getElementById('modalEditarVenda');
             if (event.target == modal) {
@@ -1403,7 +1374,6 @@ ${icone} Diferença do previsto: ${formatarMoeda(diferenca)}
             }
         }
 
-        // Inicializar
         window.onload = function() {
             atualizarDashboard();
             document.getElementById('dataVenda').valueAsDate = new Date();
