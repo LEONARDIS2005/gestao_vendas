@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Notebooks - Leilão e Revenda</title>
+    <style>
+        :root {
+            --color-primary: #2160a0;
+            --color-primary-hover: #1c4d7f;
+            --color-success: #2a8a4a;
+            --color-error: #c01530;
+            --color-warning: #a84b2f;
+            --color-bg: #fcfcf9;
+            --color-surface: #fffffe;
+            --color-text: #134252;
+            --color-text-secondary: #627077;
+            --color-border: rgba(94, 82, 64, 0.2);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+            --space-8: 8px;
+            --space-16: 16px;
+            --space-24: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: var(--color-text-secondary);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            border-bottom: 2px solid transparent;
+            transition: all 250ms;
+        }
+
+        .tab-btn.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .tab-btn:hover {
+            color: var(--color-text);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(33, 96, 160, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-row.three {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 250ms;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: #fcfcf9;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background: rgba(94, 82, 64, 0.12);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(94, 82, 64, 0.2);
+        }
+
+        .btn-danger {
+            background: rgba(192, 21, 47, 0.15);
+            color: var(--color-error);
+        }
+
+        .btn-danger:hover {
+            background: rgba(192, 21, 47, 0.25);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-surface);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            margin-top: 16px;
+        }
+
+        .table th {
+            background: rgba(94, 82, 64, 0.08);
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 14px;
+        }
+
+        .table tr:hover {
+            background: rgba(94, 82, 64, 0.04);
+        }
+
+        .card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin: 0 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin: 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-info {
+            background: rgba(33, 128, 141, 0.15);
+            color: #208a8d;
+            border-left: 4px solid #208a8d;
+        }
+
+        .alert-success {
+            background: rgba(42, 138, 74, 0.15);
+            color: #2a8a4a;
+            border-left: 4px solid #2a8a4a;
+        }
+
+        .alert-error {
+            background: rgba(192, 21, 47, 0.15);
+            color: var(--color-error);
+            border-left: 4px solid var(--color-error);
+        }
+
+        .currency {
+            font-family: 'Courier New', monospace;
+        }
+
+        .actions-col {
+            display: flex;
+            gap: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--color-text-secondary);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .form-row, .form-row.three {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .table {
+                font-size: 12px;
+            }
+            .table td, .table th {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Gestor de Notebooks</h1>
+        <p class="subtitle">Controle de compras em leilão e revenda no Mercado Livre</p>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="tab-btn" onclick="switchTab('lotes')">Meus Lotes</button>
+            <button class="tab-btn" onclick="switchTab('nova-compra')">+ Nova Compra</button>
+            <button class="tab-btn" onclick="switchTab('despesas')">Despesas</button>
+            <button class="tab-btn" onclick="switchTab('venda')">Calcular Venda</button>
+        </div>
+
+        <!-- TAB: DASHBOARD -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-grid">
+                <div class="card">
+                    <p class="card-title">Total Investido</p>
+                    <p class="card-value currency" id="totalInvestido">R$ 0,00</p>
+                </div>
+                <div class="card">
+                    <p class="card-title">Total em Despesas</p>
+                    <p class="card-value currency" id="totalDespesas">R$ 0,00</p>
+                </div>
+                <div class="card">
+                    <p class="card-title">Total Faturado</p>
+                    <p class="card-value currency" id="totalFaturado">R$ 0,00</p>
+                </div>
+                <div class="card">
+                    <p class="card-title">Lucro Líquido</p>
+                    <p class="card-value currency" id="lucroLiquido">R$ 0,00</p>
+                </div>
+            </div>
+
+            <div id="alertaLotes" style="display:none;" class="alert alert-info">
+                Você tem <strong id="qtdLotesEmAberto">0</strong> lote(s) aguardando cálculo de venda.
+            </div>
+
+            <h3>📊 Últimos Lotes</h3>
+            <div id="ultimosLotes"></div>
+        </div>
+
+        <!-- TAB: MEUS LOTES -->
+        <div id="lotes" class="tab-content">
+            <h3>Lotes Cadastrados</h3>
+            <table class="table" id="tabelaLotes">
+                <thead>
+                    <tr>
+                        <th>Lote ID</th>
+                        <th>Data</th>
+                        <th>Qtd Notebooks</th>
+                        <th>Valor Compra</th>
+                        <th>Gastos Manutençao</th>
+                        <th>Despesas ML</th>
+                        <th>Custo Total</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpotabelaLotes">
+                    <tr><td colspan="9" style="text-align:center;color:var(--color-text-secondary);">Nenhum lote cadastrado</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TAB: NOVA COMPRA -->
+        <div id="nova-compra" class="tab-content">
+            <div class="card">
+                <h3 style="margin-top:0;">Registrar Nova Compra em Leilão</h3>
+                
+                <div class="form-group">
+                    <label>Descrição do Lote (opcional)</label>
+                    <input type="text" id="descricaoLote" placeholder="Ex: Lote do leilão de 15/02 - HP e Dell">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantidade de Notebooks *</label>
+                        <input type="number" id="qtdNotebooks" min="1" placeholder="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Total do Lote (R$) *</label>
+                        <input type="number" id="valorCompra" min="0" step="0.01" placeholder="800.00" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Notas sobre o lote (condições, marcas, etc)</label>
+                    <input type="text" id="notasLote" placeholder="Notebooks HP Pavilion, alguns com problemas na tela...">
+                </div>
+
+                <button class="btn-primary" onclick="adicionarCompra()">Registrar Compra</button>
+            </div>
+        </div>
+
+        <!-- TAB: DESPESAS -->
+        <div id="despesas" class="tab-content">
+            <div class="card">
+                <h3 style="margin-top:0;">Adicionar Despesa a um Lote</h3>
+
+                <div class="form-group">
+                    <label>Selecionar Lote *</label>
+                    <select id="selectLoteDespesa" required>
+                        <option value="">-- Escolha um lote --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Despesa *</label>
+                    <select id="tipoDespesa" required onchange="atualizarLabelDespesa()">
+                        <option value="">-- Selecione --</option>
+                        <option value="manutencao">Manutenção (LCD, teclado, bateria, etc)</option>
+                        <option value="mercadolivre">Comissão/Taxa Mercado Livre</option>
+                        <option value="envio">Frete/Envio</option>
+                        <option value="outro">Outra Despesa</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label id="labelValorDespesa">Valor da Despesa (R$) *</label>
+                        <input type="number" id="valorDespesa" min="0" step="0.01" placeholder="150.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <input type="text" id="descricaoDespesa" placeholder="Ex: 2x teclados">
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="adicionarDespesa()">Adicionar Despesa</button>
+            </div>
+
+            <div id="listaDespesas"></div>
+        </div>
+
+        <!-- TAB: CALCULAR VENDA -->
+        <div id="venda" class="tab-content">
+            <div class="card">
+                <h3 style="margin-top:0;">Calcular Preço de Venda com Markup</h3>
+
+                <div class="form-group">
+                    <label>Selecionar Lote *</label>
+                    <select id="selectLoteVenda" required onchange="carregarDadosLoteVenda()">
+                        <option value="">-- Escolha um lote --</option>
+                    </select>
+                </div>
+
+                <div id="dadosLoteVenda"></div>
+
+                <div class="alert alert-info" id="calculoInfo" style="display:none;"></div>
+
+                <div class="form-group">
+                    <label>Markup desejado (%) *</label>
+                    <input type="number" id="markupPercentual" min="0" step="0.5" placeholder="40" required>
+                    <small style="color:var(--color-text-secondary);display:block;margin-top:4px;">
+                        Exemplo: 40% de markup significa que você quer ganhar 40% sobre o custo total
+                    </small>
+                </div>
+
+                <div class="alert alert-success" id="resultadoVenda" style="display:none;"></div>
+
+                <button class="btn-primary" onclick="calcularPrecoVenda()">Calcular Preço de Venda</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== ARMAZENAMENTO ==========
+        const storage = {
+            get: () => JSON.parse(localStorage.getItem('notebooks_data') || '{"lotes":[],"despesas":[]}'),
+            save: (data) => localStorage.setItem('notebooks_data', JSON.stringify(data))
+        };
+
+        // ========== FUNÇÕES DE NAVEGAÇÃO ==========
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'lotes') atualizarTabelaLotes();
+            if (tabName === 'despesas') atualizarListaDespesas();
+            if (tabName === 'venda') preencherSelectsVenda();
+            if (tabName === 'dashboard') atualizarDashboard();
+        }
+
+        // ========== ADICIONAR COMPRA ==========
+        function adicionarCompra() {
+            const qtd = parseInt(document.getElementById('qtdNotebooks').value);
+            const valor = parseFloat(document.getElementById('valorCompra').value);
+            const descricao = document.getElementById('descricaoLote').value || 'Lote sem descrição';
+            const notas = document.getElementById('notasLote').value;
+
+            if (!qtd || !valor || qtd <= 0 || valor <= 0) {
+                alert('Preencha quantidade e valor corretamente');
+                return;
+            }
+
+            const data = storage.get();
+            const novoLote = {
+                id: Date.now(),
+                data: new Date().toLocaleDateString('pt-BR'),
+                descricao,
+                notas,
+                qtdNotebooks: qtd,
+                valorCompra: valor,
+                despesas: [],
+                vendaRealizada: null
+            };
+
+            data.lotes.push(novoLote);
+            storage.save(data);
+
+            document.getElementById('descricaoLote').value = '';
+            document.getElementById('qtdNotebooks').value = '';
+            document.getElementById('valorCompra').value = '';
+            document.getElementById('notasLote').value = '';
+
+            alert('Compra registrada com sucesso!');
+            switchTab('lotes');
+            atualizarDashboard();
+        }
+
+        // ========== ADICIONAR DESPESA ==========
+        function atualizarLabelDespesa() {
+            const tipo = document.getElementById('tipoDespesa').value;
+            const label = document.getElementById('labelValorDespesa');
+            
+            if (tipo === 'mercadolivre') {
+                label.textContent = 'Comissão/Taxa (R$) *';
+            } else if (tipo === 'manutencao') {
+                label.textContent = 'Valor da Manutenção (R$) *';
+            } else {
+                label.textContent = 'Valor da Despesa (R$) *';
+            }
+        }
+
+        function adicionarDespesa() {
+            const loteId = parseInt(document.getElementById('selectLoteDespesa').value);
+            const tipo = document.getElementById('tipoDespesa').value;
+            const valor = parseFloat(document.getElementById('valorDespesa').value);
+            const descricao = document.getElementById('descricaoDespesa').value || tipo;
+
+            if (!loteId || !tipo || !valor || valor <= 0) {
+                alert('Preencha todos os campos obrigatórios');
+                return;
+            }
+
+            const data = storage.get();
+            const lote = data.lotes.find(l => l.id === loteId);
+
+            if (!lote) {
+                alert('Lote não encontrado');
+                return;
+            }
+
+            const novaDespesa = {
+                id: Date.now(),
+                tipo,
+                valor,
+                descricao,
+                data: new Date().toLocaleDateString('pt-BR')
+            };
+
+            lote.despesas.push(novaDespesa);
+            storage.save(data);
+
+            document.getElementById('selectLoteDespesa').value = '';
+            document.getElementById('tipoDespesa').value = '';
+            document.getElementById('valorDespesa').value = '';
+            document.getElementById('descricaoDespesa').value = '';
+
+            alert('Despesa adicionada com sucesso!');
+            preencherSelectsDespesa();
+            atualizarListaDespesas();
+            atualizarDashboard();
+        }
+
+        // ========== PREENCHER SELECTS ==========
+        function preencherSelectsDespesa() {
+            const data = storage.get();
+            const select = document.getElementById('selectLoteDespesa');
+            select.innerHTML = '<option value="">-- Escolha um lote --</option>';
+
+            data.lotes.forEach(lote => {
+                const custoTotal = lote.valorCompra + lote.despesas.reduce((s, d) => s + d.valor, 0);
+                select.innerHTML += `<option value="${lote.id}">${lote.descricao} - ${lote.qtdNotebooks} un - R$ ${custoTotal.toFixed(2)}</option>`;
+            });
+        }
+
+        function preencherSelectsVenda() {
+            const data = storage.get();
+            const select = document.getElementById('selectLoteVenda');
+            select.innerHTML = '<option value="">-- Escolha um lote --</option>';
+
+            data.lotes.forEach(lote => {
+                const custoTotal = lote.valorCompra + lote.despesas.reduce((s, d) => s + d.valor, 0);
+                select.innerHTML += `<option value="${lote.id}">${lote.descricao} - Custo: R$ ${custoTotal.toFixed(2)}</option>`;
+            });
+        }
+
+        // ========== CARREGAR DADOS LOTE PARA VENDA ==========
+        function carregarDadosLoteVenda() {
+            const loteId = parseInt(document.getElementById('selectLoteVenda').value);
+            const data = storage.get();
+            const lote = data.lotes.find(l => l.id === loteId);
+
+            const div = document.getElementById('dadosLoteVenda');
+            const info = document.getElementById('calculoInfo');
+
+            if (!lote) {
+                div.innerHTML = '';
+                info.style.display = 'none';
+                return;
+            }
+
+            const custosManutencao = lote.despesas.filter(d => d.tipo === 'manutencao').reduce((s, d) => s + d.valor, 0);
+            const custosMercadoLivre = lote.despesas.filter(d => d.tipo === 'mercadolivre').reduce((s, d) => s + d.valor, 0);
+            const outrosCustos = lote.despesas.filter(d => d.tipo === 'envio' || d.tipo === 'outro').reduce((s, d) => s + d.valor, 0);
+            const custoTotal = lote.valorCompra + custosManutencao + custosMercadoLivre + outrosCustos;
+            const custoPorNotebook = custoTotal / lote.qtdNotebooks;
+
+            div.innerHTML = `
+                <div style="background:rgba(94,82,64,0.08);padding:16px;border-radius:8px;margin:16px 0;">
+                    <h4 style="margin-top:0;">Detalhes do Lote</h4>
+                    <p><strong>${lote.descricao}</strong> - ${lote.qtdNotebooks} notebooks</p>
+                    <table style="width:100%;font-size:13px;">
+                        <tr>
+                            <td>Valor de compra:</td>
+                            <td style="text-align:right;"><strong>R$ ${lote.valorCompra.toFixed(2)}</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Manutenção:</td>
+                            <td style="text-align:right;">R$ ${custosManutencao.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td>Mercado Livre (taxa/frete):</td>
+                            <td style="text-align:right;">R$ ${custosMercadoLivre.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td>Outros custos:</td>
+                            <td style="text-align:right;">R$ ${outrosCustos.toFixed(2)}</td>
+                        </tr>
+                        <tr style="border-top:2px solid rgba(0,0,0,0.1);">
+                            <td><strong>CUSTO TOTAL DO LOTE:</strong></td>
+                            <td style="text-align:right;"><strong style="color:var(--color-primary);font-size:14px;">R$ ${custoTotal.toFixed(2)}</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Custo por notebook:</strong></td>
+                            <td style="text-align:right;">R$ ${custoPorNotebook.toFixed(2)}</td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+
+            info.innerHTML = `
+                <strong>💡 Como funciona:</strong><br>
+                O markup é calculado sobre o CUSTO TOTAL do lote (R$ ${custoTotal.toFixed(2)}). 
+                Se você colocar 40% de markup, o lote todo deverá ser vendido por R$ ${(custoTotal * 1.40).toFixed(2)}.
+            `;
+            info.style.display = 'block';
+        }
+
+        // ========== CALCULAR PREÇO DE VENDA ==========
+        function calcularPrecoVenda() {
+            const loteId = parseInt(document.getElementById('selectLoteVenda').value);
+            const markup = parseFloat(document.getElementById('markupPercentual').value);
+            const data = storage.get();
+            const lote = data.lotes.find(l => l.id === loteId);
+
+            if (!lote || markup < 0) {
+                alert('Selecione um lote e um markup válido');
+                return;
+            }
+
+            const custoTotal = lote.valorCompra + lote.despesas.reduce((s, d) => s + d.valor, 0);
+            const precoVenda = custoTotal * (1 + markup / 100);
+            const lucroTotal = precoVenda - custoTotal;
+            const precoPorNotebook = precoVenda / lote.qtdNotebooks;
+
+            // Guardar venda
+            lote.vendaRealizada = {
+                dataVenda: new Date().toLocaleDateString('pt-BR'),
+                markup,
+                precoVenda,
+                lucroTotal
+            };
+            storage.save(data);
+
+            const div = document.getElementById('resultadoVenda');
+            div.innerHTML = `
+                <strong>✅ Cálculo de Venda com ${markup}% de Markup</strong><br><br>
+                <table style="width:100%;font-size:14px;line-height:1.8;">
+                    <tr>
+                        <td><strong>Custo Total do Lote:</strong></td>
+                        <td style="text-align:right;"><strong>R$ ${custoTotal.toFixed(2)}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Markup desejado:</td>
+                        <td style="text-align:right;">${markup}%</td>
+                    </tr>
+                    <tr style="background:rgba(42,138,74,0.1);border:1px solid rgba(42,138,74,0.3);">
+                        <td><strong>💰 PREÇO TOTAL PARA VENDER O LOTE:</strong></td>
+                        <td style="text-align:right;"><strong style="font-size:16px;">R$ ${precoVenda.toFixed(2)}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Preço por notebook:</td>
+                        <td style="text-align:right;"><strong>R$ ${precoPorNotebook.toFixed(2)}</strong></td>
+                    </tr>
+                    <tr style="background:rgba(42,138,74,0.1);">
+                        <td><strong>Lucro Total do Lote:</strong></td>
+                        <td style="text-align:right;"><strong style="color:#2a8a4a;font-size:15px;">R$ ${lucroTotal.toFixed(2)}</strong></td>
+                    </tr>
+                </table>
+            `;
+            div.style.display = 'block';
+
+            atualizarDashboard();
+        }
+
+        // ========== ATUALIZAR TABELA LOTES ==========
+        function atualizarTabelaLotes() {
+            const data = storage.get();
+            const tbody = document.getElementById('corpotabelaLotes');
+
+            if (data.lotes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--color-text-secondary);">Nenhum lote cadastrado</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.lotes.map(lote => {
+                const custosManutencao = lote.despesas.filter(d => d.tipo === 'manutencao').reduce((s, d) => s + d.valor, 0);
+                const custosMercadoLivre = lote.despesas.filter(d => d.tipo === 'mercadolivre').reduce((s, d) => s + d.valor, 0);
+                const outrosCustos = lote.despesas.filter(d => d.tipo === 'envio' || d.tipo === 'outro').reduce((s, d) => s + d.valor, 0);
+                const custoTotal = lote.valorCompra + custosManutencao + custosMercadoLivre + outrosCustos;
+                const status = lote.vendaRealizada ? '✅ Vendido' : '⏳ Aguardando';
+
+                return `
+                    <tr>
+                        <td>${lote.id}</td>
+                        <td>${lote.data}</td>
+                        <td>${lote.qtdNotebooks}</td>
+                        <td>R$ ${lote.valorCompra.toFixed(2)}</td>
+                        <td>R$ ${custosManutencao.toFixed(2)}</td>
+                        <td>R$ ${custosMercadoLivre.toFixed(2)}</td>
+                        <td><strong>R$ ${custoTotal.toFixed(2)}</strong></td>
+                        <td>${status}</td>
+                        <td>
+                            <div class="actions-col">
+                                <button class="btn-secondary btn-sm" onclick="verDetalhesLote(${lote.id})">Ver</button>
+                                <button class="btn-danger btn-sm" onclick="deletarLote(${lote.id})">Del</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ========== LISTAR DESPESAS ==========
+        function atualizarListaDespesas() {
+            const data = storage.get();
+            const div = document.getElementById('listaDespesas');
+
+            if (data.lotes.length === 0) {
+                div.innerHTML = '<p style="color:var(--color-text-secondary);">Nenhum lote cadastrado ainda</p>';
+                return;
+            }
+
+            let html = '<h3>Despesas por Lote</h3>';
+
+            data.lotes.forEach(lote => {
+                if (lote.despesas.length === 0) return;
+
+                html += `
+                    <div class="card">
+                        <h4 style="margin-top:0;">${lote.descricao}</h4>
+                        <table class="table" style="margin-top:8px;">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${lote.despesas.map(despesa => `
+                                    <tr>
+                                        <td>${despesa.data}</td>
+                                        <td>${despesa.tipo}</td>
+                                        <td>${despesa.descricao}</td>
+                                        <td>R$ ${despesa.valor.toFixed(2)}</td>
+                                        <td><button class="btn-danger btn-sm" onclick="deletarDespesa(${lote.id}, ${despesa.id})">Del</button></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+
+            div.innerHTML = html || '<p style="color:var(--color-text-secondary);">Nenhuma despesa registrada</p>';
+        }
+
+        // ========== DELETAR LOTE ==========
+        function deletarLote(loteId) {
+            if (!confirm('Tem certeza que deseja deletar este lote?')) return;
+
+            const data = storage.get();
+            data.lotes = data.lotes.filter(l => l.id !== loteId);
+            storage.save(data);
+
+            atualizarTabelaLotes();
+            preencherSelectsDespesa();
+            preencherSelectsVenda();
+            atualizarDashboard();
+        }
+
+        // ========== DELETAR DESPESA ==========
+        function deletarDespesa(loteId, despesaId) {
+            if (!confirm('Deletar esta despesa?')) return;
+
+            const data = storage.get();
+            const lote = data.lotes.find(l => l.id === loteId);
+            if (lote) {
+                lote.despesas = lote.despesas.filter(d => d.id !== despesaId);
+                storage.save(data);
+            }
+
+            atualizarListaDespesas();
+            atualizarTabelaLotes();
+            atualizarDashboard();
+        }
+
+        // ========== DASHBOARD ==========
+        function atualizarDashboard() {
+            const data = storage.get();
+
+            let totalInvestido = 0;
+            let totalDespesas = 0;
+            let totalFaturado = 0;
+            let qtdLotesEmAberto = 0;
+
+            data.lotes.forEach(lote => {
+                totalInvestido += lote.valorCompra;
+                const despTotal = lote.despesas.reduce((s, d) => s + d.valor, 0);
+                totalDespesas += despTotal;
+
+                if (lote.vendaRealizada) {
+                    totalFaturado += lote.vendaRealizada.precoVenda;
+                } else {
+                    qtdLotesEmAberto++;
+                }
+            });
+
+            const lucroLiquido = totalFaturado - totalInvestido - totalDespesas;
+
+            document.getElementById('totalInvestido').textContent = 'R$ ' + totalInvestido.toFixed(2);
+            document.getElementById('totalDespesas').textContent = 'R$ ' + totalDespesas.toFixed(2);
+            document.getElementById('totalFaturado').textContent = 'R$ ' + totalFaturado.toFixed(2);
+            document.getElementById('lucroLiquido').textContent = 'R$ ' + lucroLiquido.toFixed(2);
+            document.getElementById('lucroLiquido').style.color = lucroLiquido >= 0 ? '#2a8a4a' : '#c01530';
+
+            if (qtdLotesEmAberto > 0) {
+                document.getElementById('qtdLotesEmAberto').textContent = qtdLotesEmAberto;
+                document.getElementById('alertaLotes').style.display = 'block';
+            } else {
+                document.getElementById('alertaLotes').style.display = 'none';
+            }
+
+            // Últimos lotes
+            const div = document.getElementById('ultimosLotes');
+            const ulti = data.lotes.slice(-3).reverse();
+            if (ulti.length === 0) {
+                div.innerHTML = '<p style="color:var(--color-text-secondary);">Nenhum lote cadastrado</p>';
+            } else {
+                div.innerHTML = ulti.map(lote => {
+                    const custoTotal = lote.valorCompra + lote.despesas.reduce((s, d) => s + d.valor, 0);
+                    const status = lote.vendaRealizada ? `✅ Vendido por R$ ${lote.vendaRealizada.precoVenda.toFixed(2)}` : '⏳ Aguardando venda';
+                    return `
+                        <div class="card">
+                            <p style="margin:0 0 8px 0;"><strong>${lote.descricao}</strong></p>
+                            <p style="margin:4px 0;color:var(--color-text-secondary);font-size:13px;">
+                                ${lote.qtdNotebooks} notebooks | Custo: R$ ${custoTotal.toFixed(2)} | ${status}
+                            </p>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function verDetalhesLote(loteId) {
+            const data = storage.get();
+            const lote = data.lotes.find(l => l.id === loteId);
+            if (!lote) return;
+
+            const custoTotal = lote.valorCompra + lote.despesas.reduce((s, d) => s + d.valor, 0);
+            alert(`
+DETALHES DO LOTE:
+${lote.descricao}
+Data: ${lote.data}
+
+Quantidade: ${lote.qtdNotebooks} notebooks
+Valor de Compra: R$ ${lote.valorCompra.toFixed(2)}
+
+Despesas: R$ ${(custoTotal - lote.valorCompra).toFixed(2)}
+CUSTO TOTAL: R$ ${custoTotal.toFixed(2)}
+
+${lote.vendaRealizada ? `
+Vendido com ${lote.vendaRealizada.markup}% de markup
+Preço de Venda: R$ ${lote.vendaRealizada.precoVenda.toFixed(2)}
+Lucro: R$ ${lote.vendaRealizada.lucroTotal.toFixed(2)}
+` : 'Aguardando cálculo de venda'}
+            `);
+        }
+
+        // ========== INICIALIZAÇÃO ==========
+        window.addEventListener('load', () => {
+            preencherSelectsDespesa();
+            preencherSelectsVenda();
+            atualizarDashboard();
+        });
+    </script>
+</body>
+</html>
