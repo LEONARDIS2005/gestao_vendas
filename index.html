@@ -50,15 +50,26 @@
         .tab {
             flex: 1;
             min-width: 140px;
-            padding: 25px 15px;
+            padding: 20px 15px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             border: none;
             background: #f5f5f5;
-            font-size: 20px;
             font-weight: 700;
             line-height: 1.6;
+        }
+
+        .tab-icon {
+            display: block;
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .tab-text {
+            display: block;
+            font-size: 13px;
+            color: #333;
         }
 
         .tab:hover {
@@ -70,8 +81,11 @@
         .tab.active {
             background: white;
             border-bottom: 5px solid #667eea;
-            color: #667eea;
             box-shadow: 0 -2px 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .tab.active .tab-text {
+            color: #667eea;
         }
 
         .content {
@@ -367,24 +381,43 @@
         </header>
 
         <div class="tabs">
-            <button class="tab active" onclick="openTab(event, 'dashboard')">📊<br>Dashboard</button>
-            <button class="tab" onclick="openTab(event, 'compra')">➕<br>Nova Compra</button>
-            <button class="tab" onclick="openTab(event, 'despesas')">💰<br>Despesas</button>
-            <button class="tab" onclick="openTab(event, 'calculo')">🧮<br>Calcular</button>
-            <button class="tab" onclick="openTab(event, 'vendas')">✅<br>Vender</button>
-            <button class="tab" onclick="openTab(event, 'lotes')">📋<br>Lotes</button>
-            <button class="tab" onclick="openTab(event, 'historico')">📜<br>Histórico</button>
+            <button class="tab active" onclick="openTab(event, 'dashboard')">
+                <span class="tab-icon">📊</span>
+                <span class="tab-text">Dashboard</span>
+            </button>
+            <button class="tab" onclick="openTab(event, 'compra')">
+                <span class="tab-icon">➕</span>
+                <span class="tab-text">Nova Compra</span>
+            </button>
+            <button class="tab" onclick="openTab(event, 'despesas')">
+                <span class="tab-icon">💰</span>
+                <span class="tab-text">Despesas</span>
+            </button>
+            <button class="tab" onclick="openTab(event, 'calculo')">
+                <span class="tab-icon">🧮</span>
+                <span class="tab-text">Calcular</span>
+            </button>
+            <button class="tab" onclick="openTab(event, 'vendas')">
+                <span class="tab-icon">✅</span>
+                <span class="tab-text">Vender</span>
+            </button>
+            <button class="tab" onclick="openTab(event, 'lotes')">
+                <span class="tab-icon">📋</span>
+                <span class="tab-text">Lotes</span>
+            </button>
+            <button class="tab" onclick="openTab(event, 'historico')">
+                <span class="tab-icon">📜</span>
+                <span class="tab-text">Histórico</span>
+            </button>
         </div>
 
         <div class="content">
-            <!-- Dashboard -->
             <div id="dashboard" class="tab-content active">
                 <div class="dashboard" id="dashboardCards"></div>
                 <h2>Resumo dos Lotes</h2>
                 <div id="dashboardTable"></div>
             </div>
 
-            <!-- Nova Compra -->
             <div id="compra" class="tab-content">
                 <h2>➕ Registrar Nova Compra</h2>
                 <form onsubmit="adicionarCompra(event)">
@@ -393,28 +426,23 @@
                         <label>Nome/Identificação do Lote:</label>
                         <input type="text" id="nomeLote" required placeholder="Ex: Lote 01 - Dell Inspiron">
                     </div>
-
                     <div class="form-group">
                         <label>Quantidade de Notebooks:</label>
                         <input type="number" id="quantidade" required min="1" placeholder="Ex: 3">
                     </div>
-
                     <div class="form-group">
                         <label>Valor Total da Compra (R$):</label>
                         <input type="number" id="valorCompra" required step="0.01" min="0" placeholder="Ex: 800.00">
                     </div>
-
                     <div class="form-group">
                         <label>Observações:</label>
                         <textarea id="observacoes" rows="3" placeholder="Detalhes, estado dos notebooks, etc."></textarea>
                     </div>
-
                     <button type="submit" id="btnSalvarLote">💾 Salvar Compra</button>
                     <button type="button" id="btnCancelarEdicaoLote" class="hidden" onclick="cancelarEdicaoLote()" style="background: #95a5a6;">❌ Cancelar</button>
                 </form>
             </div>
 
-            <!-- Despesas -->
             <div id="despesas" class="tab-content">
                 <h2>💰 Gerenciar Despesas</h2>
                 <div id="alertaDespesas"></div>
@@ -424,7 +452,6 @@
                         <label>Selecione o Lote:</label>
                         <select id="loteDespesa" required></select>
                     </div>
-
                     <div class="form-group">
                         <label>Tipo de Despesa:</label>
                         <select id="tipoDespesa" required onchange="mostrarCamposComissao()">
@@ -436,7 +463,6 @@
                             <option value="Outros">Outros</option>
                         </select>
                     </div>
-
                     <div id="camposComissaoML" class="hidden">
                         <div class="form-group">
                             <label>Tipo de Comissão:</label>
@@ -445,38 +471,31 @@
                                 <option value="percentual">Percentual (%)</option>
                             </select>
                         </div>
-
                         <div id="comissaoValor" class="form-group">
                             <label>Valor da Comissão por Unidade (R$):</label>
                             <input type="number" id="valorComissaoFixo" step="0.01" min="0" placeholder="Ex: 50.00">
                         </div>
-
                         <div id="comissaoPercentual" class="form-group hidden">
                             <label>Percentual da Comissão (%):</label>
                             <input type="number" id="percentualComissao" step="0.01" min="0" max="100" placeholder="Ex: 15">
                             <div class="info-box">ℹ️ O valor será calculado automaticamente em cada venda</div>
                         </div>
                     </div>
-
                     <div id="campoValorDespesa" class="form-group">
                         <label>Valor da Despesa (R$):</label>
                         <input type="number" id="valorDespesa" step="0.01" min="0" placeholder="Ex: 150.00">
                     </div>
-
                     <div class="form-group">
                         <label>Descrição:</label>
                         <input type="text" id="descricaoDespesa" placeholder="Ex: Troca de HD, limpeza">
                     </div>
-
                     <button type="submit" id="btnSalvarDespesa">💸 Adicionar Despesa</button>
                     <button type="button" id="btnCancelarEdicaoDespesa" class="hidden" onclick="cancelarEdicaoDespesa()" style="background: #95a5a6;">❌ Cancelar</button>
                 </form>
-
                 <h3 style="margin-top: 30px;">📋 Despesas Cadastradas</h3>
                 <div id="listaDespesas"></div>
             </div>
 
-            <!-- Cálculo -->
             <div id="calculo" class="tab-content">
                 <h2>🧮 Calcular Preço de Venda</h2>
                 <div id="alertaCalculo"></div>
@@ -485,43 +504,23 @@
                         <label>Selecione o Lote:</label>
                         <select id="loteCalculo" required onchange="mostrarCustoAtual()"></select>
                     </div>
-
                     <div id="custoAtual" style="display:none;" class="resultado">
                         <h3>📊 Custos do Lote</h3>
-                        <div class="resultado-item">
-                            <span>Valor da Compra:</span>
-                            <span id="custoCompra">R$ 0,00</span>
-                        </div>
-                        <div class="resultado-item">
-                            <span>Total de Despesas:</span>
-                            <span id="custoDespesas">R$ 0,00</span>
-                        </div>
-                        <div class="resultado-item resultado-destaque">
-                            <span>Custo Total do Lote:</span>
-                            <span id="custoTotal">R$ 0,00</span>
-                        </div>
-                        <div class="resultado-item">
-                            <span>Quantidade de Notebooks:</span>
-                            <span id="qtdNotebooks">0</span>
-                        </div>
-                        <div class="resultado-item resultado-destaque">
-                            <span>Custo Médio por Unidade:</span>
-                            <span id="custoMedio">R$ 0,00</span>
-                        </div>
+                        <div class="resultado-item"><span>Valor da Compra:</span><span id="custoCompra">R$ 0,00</span></div>
+                        <div class="resultado-item"><span>Total de Despesas:</span><span id="custoDespesas">R$ 0,00</span></div>
+                        <div class="resultado-item resultado-destaque"><span>Custo Total do Lote:</span><span id="custoTotal">R$ 0,00</span></div>
+                        <div class="resultado-item"><span>Quantidade de Notebooks:</span><span id="qtdNotebooks">0</span></div>
+                        <div class="resultado-item resultado-destaque"><span>Custo Médio por Unidade:</span><span id="custoMedio">R$ 0,00</span></div>
                     </div>
-
                     <div class="form-group">
                         <label>Markup Desejado (%):</label>
                         <input type="number" id="markup" required step="0.01" min="0" placeholder="Ex: 40">
                     </div>
-
                     <button type="submit">🔢 Calcular</button>
                 </form>
-
                 <div id="resultadoCalculo"></div>
             </div>
 
-            <!-- Vendas -->
             <div id="vendas" class="tab-content">
                 <h2>✅ Registrar Venda de Notebook</h2>
                 <div id="alertaVendas"></div>
@@ -530,31 +529,15 @@
                         <label>Selecione o Lote:</label>
                         <select id="loteVenda" required onchange="mostrarProgressoVenda()"></select>
                     </div>
-
                     <div id="progressoVenda" style="display:none;">
                         <div class="resultado">
                             <h3>📊 Progresso do Lote</h3>
-                            <div class="resultado-item">
-                                <span>Notebooks Vendidos:</span>
-                                <span id="nbVendidos">0 de 0</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="progressBar" style="width: 0%">0%</div>
-                            </div>
-                            <div class="resultado-item">
-                                <span>Faturamento Acumulado:</span>
-                                <span id="fatAcumulado">R$ 0,00</span>
-                            </div>
-                            <div class="resultado-item resultado-destaque">
-                                <span>Meta Total do Lote:</span>
-                                <span id="metaTotal">R$ 0,00</span>
-                            </div>
-                            <div class="resultado-item">
-                                <span>Falta para Atingir Meta:</span>
-                                <span id="faltaMeta" style="color: #e74c3c; font-weight: bold;">R$ 0,00</span>
-                            </div>
+                            <div class="resultado-item"><span>Notebooks Vendidos:</span><span id="nbVendidos">0 de 0</span></div>
+                            <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width: 0%">0%</div></div>
+                            <div class="resultado-item"><span>Faturamento Acumulado:</span><span id="fatAcumulado">R$ 0,00</span></div>
+                            <div class="resultado-item resultado-destaque"><span>Meta Total do Lote:</span><span id="metaTotal">R$ 0,00</span></div>
+                            <div class="resultado-item"><span>Falta para Atingir Meta:</span><span id="faltaMeta" style="color: #e74c3c; font-weight: bold;">R$ 0,00</span></div>
                         </div>
-
                         <div class="sugestao-preco" id="sugestaoPreco">
                             <h4>💡 Sugestão de Preço para Próxima Venda</h4>
                             <p>Para manter o markup de <span id="markupSugerido">0</span>%:</p>
@@ -562,33 +545,27 @@
                             <small>Este valor garante que você atinja a meta do lote</small>
                         </div>
                     </div>
-
                     <div class="form-group">
                         <label>Valor Real da Venda (R$):</label>
                         <input type="number" id="valorVendaReal" required step="0.01" min="0" placeholder="Quanto você vendeu ESTE notebook">
                     </div>
-
                     <div class="form-group">
                         <label>Data da Venda:</label>
                         <input type="date" id="dataVenda" required>
                     </div>
-
                     <div class="form-group">
                         <label>Observações da Venda:</label>
                         <textarea id="obsVenda" rows="3" placeholder="Detalhes da venda, parcelamento, etc."></textarea>
                     </div>
-
                     <button type="submit">✅ Confirmar Venda</button>
                 </form>
             </div>
 
-            <!-- Histórico -->
             <div id="historico" class="tab-content">
                 <h2>📜 Histórico de Vendas</h2>
                 <div id="tabelaHistorico"></div>
             </div>
 
-            <!-- Lotes -->
             <div id="lotes" class="tab-content">
                 <h2>📋 Todos os Lotes</h2>
                 <div id="tabelaLotes"></div>
@@ -596,7 +573,6 @@
         </div>
     </div>
 
-    <!-- Modal -->
     <div id="modalEditarVenda" class="modal">
         <div class="modal-content">
             <div class="modal-header">
