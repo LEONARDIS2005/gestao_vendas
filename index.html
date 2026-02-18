@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NotebookGest – Controle de Compra e Revenda</title>
+<style>
+  :root {
+    --primary: #1a56db;
+    --primary-dark: #1e429f;
+    --success: #057a55;
+    --danger: #e02424;
+    --warning: #c27803;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: #fff; padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  header h1 { font-size: 1.4rem; font-weight: 700; }
+  header span { font-size: .85rem; opacity: .85; }
+
+  /* NAV TABS */
+  nav { background: #fff; border-bottom: 2px solid var(--border); display: flex; gap: 4px; padding: 0 16px; overflow-x: auto; }
+  nav button {
+    background: none; border: none; padding: 14px 18px; cursor: pointer;
+    font-size: .92rem; color: var(--muted); border-bottom: 3px solid transparent;
+    white-space: nowrap; transition: all .2s;
+  }
+  nav button.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+  nav button:hover:not(.active) { color: var(--text); background: var(--bg); }
+
+  /* MAIN */
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+  /* CARDS */
+  .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .card h2 { font-size: 1.1rem; margin-bottom: 16px; color: var(--primary-dark); display: flex; align-items: center; gap: 8px; }
+
+  /* DASHBOARD */
+  .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .dash-item { background: var(--card); border-radius: var(--radius); padding: 18px 20px; border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .dash-item .label { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .dash-item .value { font-size: 1.5rem; font-weight: 700; }
+  .dash-item.green .value { color: var(--success); }
+  .dash-item.red .value { color: var(--danger); }
+  .dash-item.blue .value { color: var(--primary); }
+  .dash-item.orange .value { color: var(--warning); }
+
+  /* FORMS */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  label { display: block; font-size: .85rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  input, select, textarea {
+    width: 100%; padding: 9px 12px; border: 1px solid var(--border);
+    border-radius: 7px; font-size: .95rem; color: var(--text); background: #fff;
+    transition: border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,86,219,.12); }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  /* BUTTONS */
+  .btn { padding: 10px 20px; border: none; border-radius: 7px; font-size: .95rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-success:hover { background: #046c4e; }
+  .btn-danger { background: var(--danger); color: #fff; font-size: .8rem; padding: 6px 12px; }
+  .btn-danger:hover { background: #c81e1e; }
+  .btn-warning { background: var(--warning); color: #fff; font-size: .8rem; padding: 6px 12px; }
+  .btn-warning:hover { background: #9f580a; }
+  .btn-sm { font-size: .8rem; padding: 5px 10px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th { background: var(--bg); text-align: left; padding: 10px 12px; font-weight: 700; color: var(--muted); border-bottom: 2px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:hover td { background: #f9fafb; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 700; }
+  .badge-green { background: #def7ec; color: var(--success); }
+  .badge-orange { background: #fdf6b2; color: var(--warning); }
+  .badge-red { background: #fde8e8; color: var(--danger); }
+  .badge-blue { background: #e1effe; color: var(--primary); }
+
+  /* TABS dentro do conteúdo */
+  .subtabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .subtab { background: var(--bg); border: 1px solid var(--border); padding: 7px 16px; border-radius: 20px; cursor: pointer; font-size: .88rem; transition: all .2s; }
+  .subtab.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; }
+
+  /* PROGRESS */
+  .progress-bar-wrap { background: #e5e7eb; border-radius: 20px; height: 10px; overflow: hidden; margin-top: 6px; }
+  .progress-bar { height: 100%; border-radius: 20px; background: var(--primary); transition: width .4s; }
+
+  /* MODAL */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 999; }
+  .modal { background: #fff; border-radius: 14px; padding: 28px; max-width: 550px; width: 95%; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+  .modal h3 { margin-bottom: 20px; color: var(--primary-dark); }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* UTILS */
+  .hidden { display: none !important; }
+  .text-green { color: var(--success); font-weight: 700; }
+  .text-red { color: var(--danger); font-weight: 700; }
+  .text-muted { color: var(--muted); font-size: .85rem; }
+  .mt-2 { margin-top: 8px; }
+  .mt-3 { margin-top: 16px; }
+  .flex { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .section-title { font-size: .75rem; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); font-weight: 700; margin-bottom: 12px; }
+  .info-box { background: #eff6ff; border-left: 4px solid var(--primary); border-radius: 0 8px 8px 0; padding: 12px 16px; font-size: .9rem; margin-bottom: 16px; }
+  .info-box strong { color: var(--primary-dark); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🖥️ NotebookGest</h1>
+  <span id="hdr-resumo">Controle de Compra e Revenda</span>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('dashboard')">📊 Dashboard</button>
+  <button onclick="showTab('lotes')">📦 Lotes</button>
+  <button onclick="showTab('novo-lote')">➕ Novo Lote</button>
+  <button onclick="showTab('despesas')">💸 Despesas</button>
+  <button onclick="showTab('vendas')">💰 Vendas</button>
+  <button onclick="showTab('markup')">🧮 Markup / Precificação</button>
+</nav>
+
+<main id="app">
+
+<!-- ===== DASHBOARD ===== -->
+<div id="tab-dashboard">
+  <div class="dash-grid" id="dash-cards"></div>
+  <div class="card">
+    <h2>📋 Resumo por Lote</h2>
+    <div class="table-wrap">
+      <table id="tbl-dash">
+        <thead><tr>
+          <th>Lote</th><th>Qtd</th><th>Compra</th><th>Despesas</th>
+          <th>Faturado</th><th>Lucro</th><th>Status</th>
+        </tr></thead>
+        <tbody id="tbody-dash"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOTES ===== -->
+<div id="tab-lotes" class="hidden">
+  <div class="card">
+    <h2>📦 Meus Lotes</h2>
+    <div class="table-wrap">
+      <table id="tbl-lotes">
+        <thead><tr>
+          <th>Lote</th><th>Data</th><th>Qtd</th><th>Vlr Compra</th>
+          <th>Custo Unit.</th><th>Markup</th><th>Vlr Venda Sugerido</th><th>Status</th><th>Ações</th>
+        </tr></thead>
+        <tbody id="tbody-lotes"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NOVO LOTE ===== -->
+<div id="tab-novo-lote" class="hidden">
+  <div class="card">
+    <h2>➕ Registrar Novo Lote</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nome / Identificação do Lote</label>
+        <input id="nl-nome" placeholder="Ex: Lote Leilão 15/02 – Dell" />
+      </div>
+      <div class="form-group">
+        <label>Data da Compra</label>
+        <input id="nl-data" type="date" />
+      </div>
+      <div class="form-group">
+        <label>Quantidade de Notebooks</label>
+        <input id="nl-qtd" type="number" min="1" value="3" />
+      </div>
+      <div class="form-group">
+        <label>Valor Total Pago (R$)</label>
+        <input id="nl-valor" type="number" step="0.01" placeholder="800.00" />
+      </div>
+      <div class="form-group">
+        <label>Markup Desejado (%)</label>
+        <input id="nl-markup" type="number" step="0.1" placeholder="40" />
+      </div>
+      <div class="form-group full">
+        <label>Observações</label>
+        <textarea id="nl-obs" rows="2" placeholder="Modelo, leilão, condição..."></textarea>
+      </div>
+    </div>
+    <div class="mt-3 flex">
+      <button class="btn btn-primary" onclick="salvarLote()">✅ Salvar Lote</button>
+      <button class="btn" style="background:var(--bg);border:1px solid var(--border)" onclick="limparFormLote()">🗑️ Limpar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DESPESAS ===== -->
+<div id="tab-despesas" class="hidden">
+  <div class="card">
+    <h2>💸 Lançar Despesa</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Lote</label>
+        <select id="desp-lote"></select>
+      </div>
+      <div class="form-group">
+        <label>Tipo de Despesa</label>
+        <select id="desp-tipo">
+          <option value="Manutenção">🔧 Manutenção</option>
+          <option value="Frete Compra">🚚 Frete (Compra)</option>
+          <option value="Comissão ML">📦 Comissão Mercado Livre</option>
+          <option value="Frete ML">🚛 Frete Mercado Livre</option>
+          <option value="Embalagem">📦 Embalagem</option>
+          <option value="Imposto">🏛️ Imposto</option>
+          <option value="Outro">📌 Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Descrição (opcional)</label>
+        <input id="desp-desc" placeholder="Ex: Troca HD notebook 2" />
+      </div>
+      <div class="form-group">
+        <label>Tipo de Valor</label>
+        <select id="desp-vlr-tipo" onchange="toggleDespValor()">
+          <option value="fixo">Valor Fixo (R$)</option>
+          <option value="perc">Percentual da Venda (%)</option>
+        </select>
+      </div>
+      <div class="form-group" id="desp-vlr-fixo-grp">
+        <label>Valor (R$)</label>
+        <input id="desp-valor" type="number" step="0.01" placeholder="50.00" />
+      </div>
+      <div class="form-group hidden" id="desp-vlr-perc-grp">
+        <label>Percentual (%)</label>
+        <input id="desp-perc" type="number" step="0.1" placeholder="14.5" />
+      </div>
+      <div class="form-group">
+        <label>Data</label>
+        <input id="desp-data" type="date" />
+      </div>
+    </div>
+    <div class="mt-3">
+      <button class="btn btn-primary" onclick="salvarDespesa()">✅ Lançar Despesa</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📋 Despesas por Lote</h2>
+    <div class="subtabs" id="desp-subtabs"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Data</th><th>Ações</th></tr></thead>
+        <tbody id="tbody-despesas"></tbody>
+      </table>
+      <div id="desp-total-row" class="mt-2 text-muted"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VENDAS ===== -->
+<div id="tab-vendas" class="hidden">
+  <div class="card">
+    <h2>💰 Registrar Venda</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Lote</label>
+        <select id="vnd-lote" onchange="preencherInfoVenda()"></select>
+      </div>
+      <div class="form-group">
+        <label>Descrição (opcional)</label>
+        <input id="vnd-desc" placeholder="Ex: Notebook 1 – Dell Inspiron" />
+      </div>
+      <div class="form-group">
+        <label>Valor de Venda (R$)</label>
+        <input id="vnd-valor" type="number" step="0.01" placeholder="500.00" />
+      </div>
+      <div class="form-group">
+        <label>Canal de Venda</label>
+        <select id="vnd-canal">
+          <option value="Mercado Livre">Mercado Livre</option>
+          <option value="OLX">OLX</option>
+          <option value="Direto">Direto</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Data da Venda</label>
+        <input id="vnd-data" type="date" />
+      </div>
+    </div>
+    <div id="vnd-info-lote" class="info-box hidden mt-2"></div>
+    <div class="mt-3">
+      <button class="btn btn-success" onclick="salvarVenda()">✅ Registrar Venda</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📋 Vendas por Lote</h2>
+    <div class="subtabs" id="vnd-subtabs"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Descrição</th><th>Canal</th><th>Valor</th><th>Data</th><th>Ações</th></tr></thead>
+        <tbody id="tbody-vendas"></tbody>
+      </table>
+    </div>
+    <div id="vnd-progresso" class="mt-3"></div>
+  </div>
+</div>
+
+<!-- ===== MARKUP / PRECIFICAÇÃO ===== -->
+<div id="tab-markup" class="hidden">
+  <div class="card">
+    <h2>🧮 Calculadora de Markup e Precificação</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Lote</label>
+        <select id="mk-lote" onchange="calcularMarkup()"></select>
+      </div>
+      <div class="form-group">
+        <label>Markup Desejado (%)</label>
+        <input id="mk-markup" type="number" step="0.1" placeholder="40" oninput="calcularMarkup()" />
+      </div>
+    </div>
+    <div id="mk-resultado" class="hidden mt-3"></div>
+  </div>
+  <div class="card">
+    <h2>📊 Análise de Rentabilidade por Notebook</h2>
+    <div class="table-wrap">
+      <table id="tbl-rentabilidade">
+        <thead><tr>
+          <th>Lote</th><th>Qtd Total</th><th>Vendidos</th><th>Faltam</th>
+          <th>Meta Total</th><th>Faturado</th><th>Falta Faturar</th><th>Próx. Venda Sugerida</th>
+        </tr></thead>
+        <tbody id="tbody-rentabilidade"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ===== MODAL EDITAR LOTE ===== -->
+<div id="modal-lote" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3>✏️ Editar Lote</h3>
+    <input type="hidden" id="edit-lote-id" />
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Nome</label>
+        <input id="edit-lote-nome" />
+      </div>
+      <div class="form-group">
+        <label>Data</label>
+        <input id="edit-lote-data" type="date" />
+      </div>
+      <div class="form-group">
+        <label>Quantidade</label>
+        <input id="edit-lote-qtd" type="number" min="1" />
+      </div>
+      <div class="form-group">
+        <label>Valor de Compra (R$)</label>
+        <input id="edit-lote-valor" type="number" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>Markup (%)</label>
+        <input id="edit-lote-markup" type="number" step="0.1" />
+      </div>
+      <div class="form-group full">
+        <label>Observações</label>
+        <textarea id="edit-lote-obs" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" style="background:var(--bg);border:1px solid var(--border)" onclick="fecharModal('modal-lote')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoLote()">✅ Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL EDITAR DESPESA ===== -->
+<div id="modal-despesa" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3>✏️ Editar Despesa</h3>
+    <input type="hidden" id="edit-desp-id" />
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="edit-desp-tipo">
+          <option>Manutenção</option><option>Frete Compra</option>
+          <option>Comissão ML</option><option>Frete ML</option>
+          <option>Embalagem</option><option>Imposto</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Descrição</label>
+        <input id="edit-desp-desc" />
+      </div>
+      <div class="form-group">
+        <label>Valor (R$)</label>
+        <input id="edit-desp-valor" type="number" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>Data</label>
+        <input id="edit-desp-data" type="date" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" style="background:var(--bg);border:1px solid var(--border)" onclick="fecharModal('modal-despesa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoDespesa()">✅ Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL EDITAR VENDA ===== -->
+<div id="modal-venda" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3>✏️ Editar Venda</h3>
+    <input type="hidden" id="edit-vnd-id" />
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Descrição</label>
+        <input id="edit-vnd-desc" />
+      </div>
+      <div class="form-group">
+        <label>Canal</label>
+        <select id="edit-vnd-canal">
+          <option>Mercado Livre</option><option>OLX</option>
+          <option>Direto</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Valor (R$)</label>
+        <input id="edit-vnd-valor" type="number" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>Data</label>
+        <input id="edit-vnd-data" type="date" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" style="background:var(--bg);border:1px solid var(--border)" onclick="fecharModal('modal-venda')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoVenda()">✅ Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================================================
+//  STORAGE
+// =========================================================
+const DB = {
+  get: k => JSON.parse(localStorage.getItem(k) || '[]'),
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+};
+
+let lotes   = DB.get('ng_lotes');
+let despesas = DB.get('ng_despesas');
+let vendas  = DB.get('ng_vendas');
+let nextId  = { lote: +localStorage.getItem('ng_lid')||1, desp: +localStorage.getItem('ng_did')||1, vnd: +localStorage.getItem('ng_vid')||1 };
+
+function saveAll() {
+  DB.set('ng_lotes', lotes);
+  DB.set('ng_despesas', despesas);
+  DB.set('ng_vendas', vendas);
+  localStorage.setItem('ng_lid', nextId.lote);
+  localStorage.setItem('ng_did', nextId.desp);
+  localStorage.setItem('ng_vid', nextId.vnd);
+}
+
+// =========================================================
+//  HELPERS
+// =========================================================
+const R$ = v => 'R$ ' + (v||0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const today = () => new Date().toISOString().split('T')[0];
+
+function despesasDoLote(lid) {
+  return despesas.filter(d => d.loteId === lid);
+}
+function totalDespesasFixas(lid) {
+  return despesasDoLote(lid).filter(d => d.vlrTipo === 'fixo').reduce((s,d) => s + d.valor, 0);
+}
+function vendasDoLote(lid) {
+  return vendas.filter(v => v.loteId === lid);
+}
+function totalVendas(lid) {
+  return vendasDoLote(lid).reduce((s,v) => s + v.valor, 0);
+}
+function despesasPerc(lid) {
+  return despesasDoLote(lid).filter(d => d.vlrTipo === 'perc');
+}
+function totalDespPercSobreVendas(lid) {
+  const vnd = totalVendas(lid);
+  return despesasPerc(lid).reduce((s,d) => s + vnd * d.valor / 100, 0);
+}
+function totalDespesas(lid) {
+  return totalDespesasFixas(lid) + totalDespPercSobreVendas(lid);
+}
+function custoTotal(lid) {
+  const l = lotes.find(x => x.id === lid);
+  return (l ? l.valor : 0) + totalDespesas(lid);
+}
+function lucroLiquido(lid) {
+  return totalVendas(lid) - custoTotal(lid);
+}
+function metaMarkup(lid) {
+  const l = lotes.find(x => x.id === lid);
+  if (!l || !l.markup) return 0;
+  return custoTotal(lid) * (1 + l.markup / 100);
+}
+function statusLote(lid) {
+  const l = lotes.find(x => x.id === lid);
+  if (!l) return 'Pendente';
+  const vnd = vendasDoLote(lid);
+  if (vnd.length === 0) return 'Pendente';
+  if (vnd.length >= l.qtd) return 'Vendido';
+  return 'Parcial';
+}
+function badgeStatus(s) {
+  const map = { Pendente:'badge-red', Parcial:'badge-orange', Vendido:'badge-green' };
+  return `<span class="badge ${map[s]||'badge-blue'}">${s}</span>`;
+}
+
+// =========================================================
+//  TABS
+// =========================================================
+const tabs = ['dashboard','lotes','novo-lote','despesas','vendas','markup'];
+function showTab(t) {
+  tabs.forEach(x => {
+    document.getElementById('tab-'+x).classList.add('hidden');
+  });
+  document.querySelectorAll('nav button').forEach((b,i) => {
+    b.classList.toggle('active', tabs[i] === t);
+  });
+  document.getElementById('tab-'+t).classList.remove('hidden');
+  if (t === 'dashboard') renderDashboard();
+  if (t === 'lotes') renderLotes();
+  if (t === 'despesas') { popularSelects(); renderDespesas(lotes[0]?.id); renderSubtabsDespesas(); }
+  if (t === 'vendas') { popularSelects(); renderVendas(lotes[0]?.id); renderSubtabsVendas(); }
+  if (t === 'markup') { popularSelects(); calcularMarkup(); renderRentabilidade(); }
+}
+
+// =========================================================
+//  DASHBOARD
+// =========================================================
+function renderDashboard() {
+  const totalInvestido = lotes.reduce((s,l) => s + l.valor, 0);
+  const totalDesp = lotes.reduce((s,l) => s + totalDespesas(l.id), 0);
+  const totalFat = lotes.reduce((s,l) => s + totalVendas(l.id), 0);
+  const totalLucro = totalFat - totalInvestido - totalDesp;
+
+  document.getElementById('dash-cards').innerHTML = `
+    <div class="dash-item blue"><div class="label">💰 Investido (Leilões)</div><div class="value">${R$(totalInvestido)}</div></div>
+    <div class="dash-item red"><div class="label">💸 Total Despesas</div><div class="value">${R$(totalDesp)}</div></div>
+    <div class="dash-item orange"><div class="label">📦 Faturamento Bruto</div><div class="value">${R$(totalFat)}</div></div>
+    <div class="dash-item ${totalLucro>=0?'green':'red'}"><div class="label">📈 Lucro Líquido</div><div class="value">${R$(totalLucro)}</div></div>
+    <div class="dash-item blue"><div class="label">📦 Lotes Cadastrados</div><div class="value">${lotes.length}</div></div>
+    <div class="dash-item green"><div class="label">✅ Lotes Vendidos</div><div class="value">${lotes.filter(l=>statusLote(l.id)==='Vendido').length}</div></div>
+  `;
+
+  const tbody = document.getElementById('tbody-dash');
+  tbody.innerHTML = lotes.map(l => {
+    const fat = totalVendas(l.id);
+    const desp = totalDespesas(l.id);
+    const luc = fat - l.valor - desp;
+    const st = statusLote(l.id);
+    return `<tr>
+      <td><strong>${l.nome}</strong></td>
+      <td>${l.qtd}</td>
+      <td>${R$(l.valor)}</td>
+      <td>${R$(desp)}</td>
+      <td>${R$(fat)}</td>
+      <td class="${luc>=0?'text-green':'text-red'}">${R$(luc)}</td>
+      <td>${badgeStatus(st)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted)">Nenhum lote cadastrado ainda.</td></tr>';
+
+  document.getElementById('hdr-resumo').textContent = `${lotes.length} lotes · Lucro: ${R$(totalFat - totalInvestido - totalDesp)}`;
+}
+
+// =========================================================
+//  LOTES
+// =========================================================
+function renderLotes() {
+  const tbody = document.getElementById('tbody-lotes');
+  tbody.innerHTML = lotes.map(l => {
+    const custo = l.valor + totalDespesas(l.id);
+    const meta = l.markup ? custo * (1 + l.markup/100) : 0;
+    const unitSug = meta ? meta / l.qtd : 0;
+    const st = statusLote(l.id);
+    return `<tr>
+      <td><strong>${l.nome}</strong>${l.obs?`<br><span class="text-muted">${l.obs}</span>`:''}
+      </td>
+      <td>${l.data||'-'}</td>
+      <td>${l.qtd}</td>
+      <td>${R$(l.valor)}</td>
+      <td>${R$(custo/l.qtd)}</td>
+      <td>${l.markup?l.markup+'%':'-'}</td>
+      <td>${unitSug?R$(unitSug):'-'}</td>
+      <td>${badgeStatus(st)}</td>
+      <td>
+        <button class="btn btn-warning btn-sm" onclick="abrirEditarLote(${l.id})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirLote(${l.id})">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--muted)">Nenhum lote.</td></tr>';
+}
+
+function salvarLote() {
+  const nome = document.getElementById('nl-nome').value.trim();
+  const qtd = +document.getElementById('nl-qtd').value;
+  const valor = +document.getElementById('nl-valor').value;
+  if (!nome || !qtd || !valor) { alert('Preencha nome, quantidade e valor.'); return; }
+  lotes.push({ id: nextId.lote++, nome, data: document.getElementById('nl-data').value||today(), qtd, valor, markup: +document.getElementById('nl-markup').value||0, obs: document.getElementById('nl-obs').value });
+  saveAll(); limparFormLote(); alert('✅ Lote salvo!'); showTab('lotes');
+}
+function limparFormLote() {
+  ['nl-nome','nl-data','nl-qtd','nl-valor','nl-markup','nl-obs'].forEach(i => document.getElementById(i).value = i==='nl-qtd'?3:i==='nl-data'?today():'');
+}
+function abrirEditarLote(id) {
+  const l = lotes.find(x=>x.id===id);
+  document.getElementById('edit-lote-id').value = id;
+  document.getElementById('edit-lote-nome').value = l.nome;
+  document.getElementById('edit-lote-data').value = l.data;
+  document.getElementById('edit-lote-qtd').value = l.qtd;
+  document.getElementById('edit-lote-valor').value = l.valor;
+  document.getElementById('edit-lote-markup').value = l.markup;
+  document.getElementById('edit-lote-obs').value = l.obs||'';
+  document.getElementById('modal-lote').classList.remove('hidden');
+}
+function salvarEdicaoLote() {
+  const id = +document.getElementById('edit-lote-id').value;
+  const idx = lotes.findIndex(x=>x.id===id);
+  lotes[idx] = { ...lotes[idx],
+    nome: document.getElementById('edit-lote-nome').value,
+    data: document.getElementById('edit-lote-data').value,
+    qtd: +document.getElementById('edit-lote-qtd').value,
+    valor: +document.getElementById('edit-lote-valor').value,
+    markup: +document.getElementById('edit-lote-markup').value,
+    obs: document.getElementById('edit-lote-obs').value,
+  };
+  saveAll(); fecharModal('modal-lote'); renderLotes(); renderDashboard();
+}
+function excluirLote(id) {
+  if (!confirm('Excluir este lote? Todas as despesas e vendas associadas serão removidas.')) return;
+  lotes = lotes.filter(x=>x.id!==id);
+  despesas = despesas.filter(x=>x.loteId!==id);
+  vendas = vendas.filter(x=>x.loteId!==id);
+  saveAll(); renderLotes();
+}
+
+// =========================================================
+//  DESPESAS
+// =========================================================
+let despLoteAtivo = null;
+function renderSubtabsDespesas() {
+  const container = document.getElementById('desp-subtabs');
+  if (!lotes.length) { container.innerHTML='<span class="text-muted">Nenhum lote cadastrado.</span>'; return; }
+  if (!despLoteAtivo) despLoteAtivo = lotes[0].id;
+  container.innerHTML = lotes.map(l =>
+    `<div class="subtab ${l.id===despLoteAtivo?'active':''}" onclick="selectDespLote(${l.id})">${l.nome}</div>`
+  ).join('');
+}
+function selectDespLote(id) { despLoteAtivo = id; renderSubtabsDespesas(); renderDespesas(id); }
+
+function renderDespesas(lid) {
+  if (!lid) return;
+  const vndTotal = totalVendas(lid);
+  const desp = despesasDoLote(lid);
+  const tbody = document.getElementById('tbody-despesas');
+  tbody.innerHTML = desp.map(d => {
+    const vlrExib = d.vlrTipo==='perc' ? `${d.valor}% = ${R$(vndTotal*d.valor/100)} s/ vendas` : R$(d.valor);
+    return `<tr>
+      <td><span class="badge badge-blue">${d.tipo}</span></td>
+      <td>${d.desc||'-'}</td>
+      <td>${vlrExib}</td>
+      <td>${d.data||'-'}</td>
+      <td>
+        <button class="btn btn-warning btn-sm" onclick="abrirEditarDespesa(${d.id})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirDespesa(${d.id})">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Nenhuma despesa.</td></tr>';
+  const total = totalDespesas(lid);
+  document.getElementById('desp-total-row').innerHTML = `<strong>Total de Despesas: ${R$(total)}</strong>`;
+}
+
+function toggleDespValor() {
+  const t = document.getElementById('desp-vlr-tipo').value;
+  document.getElementById('desp-vlr-fixo-grp').classList.toggle('hidden', t==='perc');
+  document.getElementById('desp-vlr-perc-grp').classList.toggle('hidden', t==='fixo');
+}
+function salvarDespesa() {
+  const loteId = +document.getElementById('desp-lote').value;
+  const tipo = document.getElementById('desp-tipo').value;
+  const desc = document.getElementById('desp-desc').value;
+  const vlrTipo = document.getElementById('desp-vlr-tipo').value;
+  const valor = vlrTipo==='fixo' ? +document.getElementById('desp-valor').value : +document.getElementById('desp-perc').value;
+  if (!loteId || !valor) { alert('Selecione o lote e informe o valor.'); return; }
+  despesas.push({ id: nextId.desp++, loteId, tipo, desc, valor, vlrTipo, data: document.getElementById('desp-data').value||today() });
+  saveAll();
+  despLoteAtivo = loteId;
+  renderSubtabsDespesas(); renderDespesas(loteId);
+  alert('✅ Despesa lançada!');
+}
+function abrirEditarDespesa(id) {
+  const d = despesas.find(x=>x.id===id);
+  document.getElementById('edit-desp-id').value = id;
+  document.getElementById('edit-desp-tipo').value = d.tipo;
+  document.getElementById('edit-desp-desc').value = d.desc||'';
+  document.getElementById('edit-desp-valor').value = d.valor;
+  document.getElementById('edit-desp-data').value = d.data||'';
+  document.getElementById('modal-despesa').classList.remove('hidden');
+}
+function salvarEdicaoDespesa() {
+  const id = +document.getElementById('edit-desp-id').value;
+  const idx = despesas.findIndex(x=>x.id===id);
+  despesas[idx] = { ...despesas[idx],
+    tipo: document.getElementById('edit-desp-tipo').value,
+    desc: document.getElementById('edit-desp-desc').value,
+    valor: +document.getElementById('edit-desp-valor').value,
+    data: document.getElementById('edit-desp-data').value,
+  };
+  saveAll(); fecharModal('modal-despesa'); renderDespesas(despLoteAtivo);
+}
+function excluirDespesa(id) {
+  if (!confirm('Excluir esta despesa?')) return;
+  despesas = despesas.filter(x=>x.id!==id);
+  saveAll(); renderDespesas(despLoteAtivo);
+}
+
+// =========================================================
+//  VENDAS
+// =========================================================
+let vndLoteAtivo = null;
+function renderSubtabsVendas() {
+  const container = document.getElementById('vnd-subtabs');
+  if (!lotes.length) { container.innerHTML='<span class="text-muted">Nenhum lote cadastrado.</span>'; return; }
+  if (!vndLoteAtivo) vndLoteAtivo = lotes[0].id;
+  container.innerHTML = lotes.map(l =>
+    `<div class="subtab ${l.id===vndLoteAtivo?'active':''}" onclick="selectVndLote(${l.id})">${l.nome}</div>`
+  ).join('');
+  renderVendas(vndLoteAtivo);
+}
+function selectVndLote(id) { vndLoteAtivo = id; renderSubtabsVendas(); renderVendas(id); }
+
+function preencherInfoVenda() {
+  const lid = +document.getElementById('vnd-lote').value;
+  const l = lotes.find(x=>x.id===lid);
+  if (!l) return;
+  const meta = metaMarkup(lid);
+  const fat = totalVendas(lid);
+  const vndCount = vendasDoLote(lid).length;
+  const restam = l.qtd - vndCount;
+  const falta = Math.max(0, meta - fat);
+  const proxSug = restam > 0 ? falta / restam : 0;
+  const box = document.getElementById('vnd-info-lote');
+  if (meta) {
+    box.innerHTML = `<strong>Meta (markup ${l.markup}%):</strong> ${R$(meta)} &nbsp;|&nbsp; <strong>Faturado:</strong> ${R$(fat)} &nbsp;|&nbsp; <strong>Falta:</strong> ${R$(falta)}<br>Notebooks vendidos: ${vndCount}/${l.qtd} &nbsp;·&nbsp; <strong>Preço sugerido próxima venda: ${R$(proxSug)}</strong>`;
+    box.classList.remove('hidden');
+  } else box.classList.add('hidden');
+}
+
+function renderVendas(lid) {
+  if (!lid) return;
+  const vnd = vendasDoLote(lid);
+  const tbody = document.getElementById('tbody-vendas');
+  tbody.innerHTML = vnd.map(v => `<tr>
+    <td>${v.desc||'-'}</td>
+    <td><span class="badge badge-blue">${v.canal}</span></td>
+    <td class="text-green">${R$(v.valor)}</td>
+    <td>${v.data||'-'}</td>
+    <td>
+      <button class="btn btn-warning btn-sm" onclick="abrirEditarVenda(${v.id})">✏️</button>
+      <button class="btn btn-danger btn-sm" onclick="excluirVenda(${v.id})">🗑️</button>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Nenhuma venda.</td></tr>';
+
+  const l = lotes.find(x=>x.id===lid);
+  if (!l) return;
+  const fat = totalVendas(lid);
+  const meta = metaMarkup(lid);
+  const pct = meta ? Math.min(100, fat/meta*100) : 0;
+  const restam = Math.max(0, l.qtd - vnd.length);
+  const falta = Math.max(0, meta - fat);
+  document.getElementById('vnd-progresso').innerHTML = meta ? `
+    <div class="section-title">Progresso para atingir markup de ${l.markup}%</div>
+    <div class="flex">
+      <span class="text-muted" style="min-width:80px">Meta: ${R$(meta)}</span>
+      <div class="progress-bar-wrap" style="flex:1"><div class="progress-bar" style="width:${pct}%"></div></div>
+      <span class="text-muted">${pct.toFixed(1)}%</span>
+    </div>
+    <div class="mt-2 text-muted">Faturado: <strong>${R$(fat)}</strong> &nbsp;·&nbsp; Falta: <strong>${R$(falta)}</strong> &nbsp;·&nbsp; Restam ${restam} notebook(s)</div>
+  ` : '';
+}
+
+function salvarVenda() {
+  const loteId = +document.getElementById('vnd-lote').value;
+  const valor = +document.getElementById('vnd-valor').value;
+  if (!loteId || !valor) { alert('Selecione o lote e informe o valor.'); return; }
+  vendas.push({ id: nextId.vnd++, loteId, desc: document.getElementById('vnd-desc').value, valor, canal: document.getElementById('vnd-canal').value, data: document.getElementById('vnd-data').value||today() });
+  saveAll();
+  vndLoteAtivo = loteId;
+  document.getElementById('vnd-valor').value='';
+  document.getElementById('vnd-desc').value='';
+  renderSubtabsVendas(); renderVendas(loteId); preencherInfoVenda();
+  alert('✅ Venda registrada!');
+}
+function abrirEditarVenda(id) {
+  const v = vendas.find(x=>x.id===id);
+  document.getElementById('edit-vnd-id').value = id;
+  document.getElementById('edit-vnd-desc').value = v.desc||'';
+  document.getElementById('edit-vnd-canal').value = v.canal;
+  document.getElementById('edit-vnd-valor').value = v.valor;
+  document.getElementById('edit-vnd-data').value = v.data||'';
+  document.getElementById('modal-venda').classList.remove('hidden');
+}
+function salvarEdicaoVenda() {
+  const id = +document.getElementById('edit-vnd-id').value;
+  const idx = vendas.findIndex(x=>x.id===id);
+  vendas[idx] = { ...vendas[idx],
+    desc: document.getElementById('edit-vnd-desc').value,
+    canal: document.getElementById('edit-vnd-canal').value,
+    valor: +document.getElementById('edit-vnd-valor').value,
+    data: document.getElementById('edit-vnd-data').value,
+  };
+  saveAll(); fecharModal('modal-venda'); renderVendas(vndLoteAtivo);
+}
+function excluirVenda(id) {
+  if (!confirm('Excluir esta venda?')) return;
+  vendas = vendas.filter(x=>x.id!==id);
+  saveAll(); renderVendas(vndLoteAtivo);
+}
+
+// =========================================================
+//  MARKUP
+// =========================================================
+function calcularMarkup() {
+  const lid = +document.getElementById('mk-lote').value;
+  const mk = +document.getElementById('mk-markup').value;
+  if (!lid) return;
+  const l = lotes.find(x=>x.id===lid);
+  if (!l) return;
+  const custo = l.valor + totalDespesasFixas(lid);
+  const meta = custo * (1 + mk/100);
+  const unitSug = meta / l.qtd;
+  const fat = totalVendas(lid);
+  const lucro = fat - custoTotal(lid);
+  const res = document.getElementById('mk-resultado');
+  res.classList.remove('hidden');
+  res.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px">
+      <div class="dash-item blue"><div class="label">Custo Total Lote</div><div class="value" style="font-size:1.2rem">${R$(custo)}</div></div>
+      <div class="dash-item orange"><div class="label">Meta de Faturamento</div><div class="value" style="font-size:1.2rem">${R$(meta)}</div></div>
+      <div class="dash-item green"><div class="label">Preço Sugerido / Unit.</div><div class="value" style="font-size:1.2rem">${R$(unitSug)}</div></div>
+      <div class="dash-item ${lucro>=0?'green':'red'}"><div class="label">Lucro Atual</div><div class="value" style="font-size:1.2rem">${R$(lucro)}</div></div>
+    </div>
+    <div class="info-box mt-3">
+      Para atingir <strong>${mk}%</strong> de markup no lote "<strong>${l.nome}</strong>",
+      você precisa faturar no total <strong>${R$(meta)}</strong>
+      → sugerido <strong>${R$(unitSug)}</strong> por notebook.
+      Custo considerado: compra ${R$(l.valor)} + despesas fixas ${R$(totalDespesasFixas(lid))}.
+    </div>
+  `;
+  renderRentabilidade();
+}
+
+function renderRentabilidade() {
+  const tbody = document.getElementById('tbody-rentabilidade');
+  tbody.innerHTML = lotes.map(l => {
+    const meta = metaMarkup(l.id);
+    const fat = totalVendas(l.id);
+    const vndCount = vendasDoLote(l.id).length;
+    const restam = Math.max(0, l.qtd - vndCount);
+    const falta = Math.max(0, meta - fat);
+    const proxSug = restam > 0 ? falta/restam : 0;
+    return `<tr>
+      <td><strong>${l.nome}</strong></td>
+      <td>${l.qtd}</td>
+      <td>${vndCount}</td>
+      <td>${restam}</td>
+      <td>${meta ? R$(meta) : '-'}</td>
+      <td class="text-green">${R$(fat)}</td>
+      <td class="${falta>0?'text-red':'text-green'}">${R$(falta)}</td>
+      <td class="text-green"><strong>${proxSug ? R$(proxSug) : '-'}</strong></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--muted)">Nenhum lote.</td></tr>';
+}
+
+// =========================================================
+//  SELECTS POPULARES
+// =========================================================
+function popularSelects() {
+  const ids = ['desp-lote','vnd-lote','mk-lote'];
+  ids.forEach(sid => {
+    const sel = document.getElementById(sid);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = lotes.map(l => `<option value="${l.id}">${l.nome}</option>`).join('') || '<option value="">Nenhum lote</option>';
+    if (cur) sel.value = cur;
+  });
+}
+
+// =========================================================
+//  MODAL
+// =========================================================
+function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// =========================================================
+//  INIT
+// =========================================================
+document.getElementById('nl-data').value = today();
+document.getElementById('desp-data').value = today();
+document.getElementById('vnd-data').value = today();
+renderDashboard();
+</script>
+</body>
+</html>
